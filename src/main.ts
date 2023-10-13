@@ -18,11 +18,12 @@ export async function run(): Promise<void> {
 	const name = `dependencies-GH-${event.number}.md`
 	core.debug(`Writing changeset named ${name}`)
 
+	core.debug(`Fetching patch`)
 	const octokit = github.getOctokit(core.getInput('token'))
-	const patch = octokit.request({
+	const patch = await octokit.request({
 		url: event.pull_request.patch_url
 	})
-	core.debug(`Fetched patch:\n${patch}`)
+	console.log(`Fetched patch:\n${patch.data}`)
 
 	// Set outputs for other workflow steps to use
 	core.setOutput('created-changeset', false)
