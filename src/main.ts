@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as github from '@actions/github'
 import { getEvent } from './event'
 
 /**
@@ -12,11 +13,16 @@ export async function run(): Promise<void> {
 		core.debug('Short-circuiting as it appears this pull request is not open anymore')
 	}
 
-	const changesetFolder: string = core.getInput('changeset-folder')
+	const changesetFolder = core.getInput('changeset-folder')
 	core.debug(`Writing changesets to ${changesetFolder}`)
-
 	const name = `dependencies-GH-${event.number}.md`
 	core.debug(`Writing changeset named ${name}`)
+
+	const octokit = github.getOctokit(core.getInput('token'))
+	const patch = octokit.request({
+		url: event.pull_request.patch_url
+	})
+	core.debug(`Fetched patch:\n${patch}`)
 
 	// Set outputs for other workflow steps to use
 	core.setOutput('created-changeset', false)
