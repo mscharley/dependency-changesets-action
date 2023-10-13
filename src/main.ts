@@ -116,6 +116,7 @@ ${event.pull_request.title}
 	octokit.rest.repos.createOrUpdateFileContents({
 		owner,
 		repo,
+		branch: event.pull_request.head.ref,
 		path: outputPath,
 		message: core.getInput('commit-message'),
 		content: Buffer.from(changeset, 'utf8').toString('base64'),
