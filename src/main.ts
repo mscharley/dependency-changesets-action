@@ -47,6 +47,7 @@ export async function run(): Promise<void> {
 	const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch'
 	if (updateType === 'none') {
 		console.log('Detected an update type of none, skipping this PR')
+		core.setOutput('created-changeset', false)
 		return
 	}
 
@@ -65,11 +66,13 @@ export async function run(): Promise<void> {
 	const patch = parsePatch(patchResponse.data as string, outputPath)
 	if (patch.foundChangeset) {
 		console.log('Changeset has already been pushed')
+		core.setOutput('created-changeset', false)
 		return
 	}
 	if (patch.packageFiles.length < 1) {
 		console.log('No package.json files were updated')
-		// return
+		core.setOutput('created-changeset', false)
+		return
 	}
 	console.log('Found patched package files:', patch.packageFiles)
 
@@ -124,5 +127,5 @@ ${event.pull_request.title}
 	})
 
 	// Set outputs for other workflow steps to use
-	core.setOutput('created-changeset', false)
+	core.setOutput('created-changeset', true)
 }
