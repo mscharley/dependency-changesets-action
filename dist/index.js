@@ -29843,6 +29843,14 @@ const parseSemanticCommitMessage = (message) => {
     }
     return 'none';
 };
+const getAuthor = () => {
+    const name = core.getInput('author-name');
+    const email = core.getInput('author-email');
+    if (name === '' || email === '') {
+        return undefined;
+    }
+    return { name, email };
+};
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -29870,12 +29878,14 @@ async function run() {
     core.debug(`Writing changesets to ${changesetFolder}`);
     const name = `dependencies-GH-${event.number}.md`;
     core.debug(`Writing changeset named ${name}`);
+    const outputPath = (0, node_path_1.join)(changesetFolder, name);
+    console.log('Creating changeset:', outputPath);
     core.debug(`Fetching patch`);
     const octokit = github.getOctokit(core.getInput('token'));
     const patchResponse = await octokit.request({
         url: event.pull_request.patch_url
     });
-    const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, (0, node_path_1.join)(changesetFolder, name));
+    const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, outputPath);
     if (patch.foundChangeset) {
         console.log('Changeset has already been pushed');
         return;
@@ -29912,8 +29922,15 @@ ${packages.map(p => `"${p}": ${updateType}\n`).join('')}---
 
 ${event.pull_request.title}
 `;
-    console.log('Generated changeset:');
-    console.log(changeset);
+    core.debug('Pushing changeset to Github');
+    octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path: outputPath,
+        message: core.getInput('commit-message'),
+        content: changeset,
+        author: getAuthor()
+    });
     // Set outputs for other workflow steps to use
     core.setOutput('created-changeset', false);
 }

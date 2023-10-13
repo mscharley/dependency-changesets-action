@@ -14,6 +14,16 @@ const parseSemanticCommitMessage = (message: string): 'minor' | 'patch' | 'none'
 	return 'none'
 }
 
+const getAuthor = (): undefined | { name: string; email: string } => {
+	const name = core.getInput('author-name')
+	const email = core.getInput('author-email')
+	if (name === '' || email === '') {
+		return undefined
+	}
+
+	return { name, email }
+}
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -44,13 +54,15 @@ export async function run(): Promise<void> {
 	core.debug(`Writing changesets to ${changesetFolder}`)
 	const name = `dependencies-GH-${event.number}.md`
 	core.debug(`Writing changeset named ${name}`)
+	const outputPath = joinPath(changesetFolder, name)
+	console.log('Creating changeset:', outputPath)
 
 	core.debug(`Fetching patch`)
 	const octokit = github.getOctokit(core.getInput('token'))
 	const patchResponse = await octokit.request({
 		url: event.pull_request.patch_url
 	})
-	const patch = parsePatch(patchResponse.data as string, joinPath(changesetFolder, name))
+	const patch = parsePatch(patchResponse.data as string, outputPath)
 	if (patch.foundChangeset) {
 		console.log('Changeset has already been pushed')
 		return
@@ -91,6 +103,7 @@ export async function run(): Promise<void> {
 			})
 		)
 	)
+
 	core.debug(`Mapping for packages: ${JSON.stringify(packageMap)}`)
 	const packages = Object.values(packageMap).filter(<T>(v: T | null | undefined): v is T => v != null)
 	const changeset = `---
@@ -98,8 +111,16 @@ ${packages.map(p => `"${p}": ${updateType}\n`).join('')}---
 
 ${event.pull_request.title}
 `
-	console.log('Generated changeset:')
-	console.log(changeset)
+
+	core.debug('Pushing changeset to Github')
+	octokit.rest.repos.createOrUpdateFileContents({
+		owner,
+		repo,
+		path: outputPath,
+		message: core.getInput('commit-message'),
+		content: changeset,
+		author: getAuthor()
+	})
 
 	// Set outputs for other workflow steps to use
 	core.setOutput('created-changeset', false)

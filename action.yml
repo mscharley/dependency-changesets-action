@@ -15,6 +15,16 @@ inputs:
     description: 'Whether to respect semantic commit prefixes'
     required: false
     default: 'true'
+  commit-message:
+    description: 'The message to use for commits'
+    required: false
+    default: 'chore(deps): changeset for dependency update'
+  author-name:
+    description: 'The name of the author to use when committing'
+    required: false
+  author-email:
+    description: 'The email for the author to use when committing'
+    required: false
 
 # Define your outputs here.
 outputs:
