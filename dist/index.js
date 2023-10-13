@@ -29832,6 +29832,8 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const event_1 = __nccwpck_require__(1213);
+const parsePatch_1 = __nccwpck_require__(2421);
+const node_path_1 = __nccwpck_require__(9411);
 const parseSemanticCommitMessage = (message) => {
     if (message.startsWith('fix')) {
         return 'patch';
@@ -29852,6 +29854,11 @@ async function run() {
         console.log('Short-circuiting as it appears this pull request is not open anymore');
         return;
     }
+    const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
+    const repo = event.pull_request.base.repo.name;
+    if (owner == null) {
+        throw new Error('Unable to determine the owner of this repo.');
+    }
     core.debug(`Processing PR #${event.number}: ${event.pull_request.title}`);
     const useSemanticCommits = core.getBooleanInput('use-semantic-commits');
     const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
@@ -29868,12 +29875,69 @@ async function run() {
     const patchResponse = await octokit.request({
         url: event.pull_request.patch_url
     });
-    const patch = patchResponse.data;
-    console.log(patch);
+    const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, (0, node_path_1.join)(changesetFolder, name));
+    if (patch.foundChangeset) {
+        console.log('Changeset has already been pushed');
+        return;
+    }
+    if (patch.packageFiles.length < 1) {
+        console.log('No package.json files were updated');
+        // return
+    }
+    console.log('Found patched package files:', patch.packageFiles);
+    const packageMap = Object.fromEntries(await Promise.all(patch.packageFiles.map(async (path) => {
+        core.debug(`Fetching package from ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
+        const packageJsonResponse = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            ref: event.pull_request.head.ref,
+            path,
+            mediaType: {
+                format: 'raw'
+            }
+        });
+        if (Array.isArray(packageJsonResponse.data) ||
+            !('content' in packageJsonResponse.data) ||
+            !('encoding' in packageJsonResponse.data && packageJsonResponse.data.encoding === 'base64')) {
+            throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
+        }
+        const content = packageJsonResponse.data.content;
+        const packageJson = JSON.parse(content);
+        return [path, packageJson.name];
+    })));
+    core.debug(`Mapping for packages: ${JSON.stringify(packageMap)}`);
+    const packages = Object.values(packageMap).filter((v) => v != null);
+    const changeset = `---
+${packages.map(p => `"${p}": ${updateType}\n`).join('')}---
+
+${event.pull_request.title}
+`;
+    console.log('Generated changeset:');
+    console.log(changeset);
     // Set outputs for other workflow steps to use
     core.setOutput('created-changeset', false);
 }
 exports.run = run;
+
+
+/***/ }),
+
+/***/ 2421:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parsePatch = void 0;
+const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
+const parsePatch = (patch, changesetFile) => {
+    const changed = [...patch.matchAll(changedFiles)].map(match => match[1]);
+    return {
+        packageFiles: changed.filter(f => f === 'package.json' || f.endsWith('/package.json')),
+        foundChangeset: changed.includes(changesetFile)
+    };
+};
+exports.parsePatch = parsePatch;
 
 
 /***/ }),
@@ -29987,6 +30051,14 @@ module.exports = require("node:events");
 
 "use strict";
 module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 

@@ -1,19 +1,26 @@
 import { readFile } from 'node:fs/promises'
 
+export interface Ref {
+	ref: string
+	sha: string
+	repo: {
+		name: string
+		organization?: string
+		owner?: {
+			id: number
+			login: string
+		}
+	}
+}
+
 export interface PullRequest {
 	number: number
 	pull_request: {
 		_links: {
 			commits: { href: string }
 		}
-		base: {
-			ref: string
-			sha: string
-		}
-		head: {
-			ref: string
-			sha: string
-		}
+		base: Ref
+		head: Ref
 		patch_url: string
 		state: 'open' | 'closed'
 		title: string
