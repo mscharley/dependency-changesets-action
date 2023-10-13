@@ -29879,7 +29879,7 @@ async function run() {
     const name = `dependencies-GH-${event.number}.md`;
     core.debug(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(changesetFolder, name);
-    console.log('Creating changeset:', outputPath);
+    console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`);
     core.debug(`Fetching patch`);
     const octokit = github.getOctokit(core.getInput('token'));
     const patchResponse = await octokit.request({

@@ -55,7 +55,7 @@ export async function run(): Promise<void> {
 	const name = `dependencies-GH-${event.number}.md`
 	core.debug(`Writing changeset named ${name}`)
 	const outputPath = joinPath(changesetFolder, name)
-	console.log('Creating changeset:', outputPath)
+	console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`)
 
 	core.debug(`Fetching patch`)
 	const octokit = github.getOctokit(core.getInput('token'))
