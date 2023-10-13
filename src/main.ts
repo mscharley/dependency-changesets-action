@@ -118,7 +118,7 @@ ${event.pull_request.title}
 		repo,
 		path: outputPath,
 		message: core.getInput('commit-message'),
-		content: changeset,
+		content: Buffer.from(changeset, 'utf8').toString('base64'),
 		author: getAuthor()
 	})
 
