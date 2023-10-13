@@ -29857,6 +29857,7 @@ async function run() {
     const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
     if (updateType === 'none') {
         console.log('Detected an update type of none, skipping this PR');
+        return;
     }
     const changesetFolder = core.getInput('changeset-folder');
     core.debug(`Writing changesets to ${changesetFolder}`);
