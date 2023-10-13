@@ -29832,6 +29832,15 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const event_1 = __nccwpck_require__(1213);
+const parseSemanticCommitMessage = (message) => {
+    if (message.startsWith('fix')) {
+        return 'patch';
+    }
+    else if (message.startsWith('feat')) {
+        return 'minor';
+    }
+    return 'none';
+};
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -29840,7 +29849,14 @@ async function run() {
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
     const event = await (0, event_1.getEvent)();
     if (event.pull_request.state !== 'open') {
-        core.debug('Short-circuiting as it appears this pull request is not open anymore');
+        console.log('Short-circuiting as it appears this pull request is not open anymore');
+        return;
+    }
+    core.debug(`Processing PR #${event.number}: ${event.pull_request.title}`);
+    const useSemanticCommits = core.getBooleanInput('use-semantic-commits');
+    const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
+    if (updateType === 'none') {
+        console.log('Detected an update type of none, skipping this PR');
     }
     const changesetFolder = core.getInput('changeset-folder');
     core.debug(`Writing changesets to ${changesetFolder}`);
@@ -29848,10 +29864,11 @@ async function run() {
     core.debug(`Writing changeset named ${name}`);
     core.debug(`Fetching patch`);
     const octokit = github.getOctokit(core.getInput('token'));
-    const patch = await octokit.request({
+    const patchResponse = await octokit.request({
         url: event.pull_request.patch_url
     });
-    console.log(`Fetched patch:\n${patch.data}`);
+    const patch = patchResponse.data;
+    console.log(patch);
     // Set outputs for other workflow steps to use
     core.setOutput('created-changeset', false);
 }
