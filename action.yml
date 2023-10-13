@@ -1,18 +1,18 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Add a changeset for dependency updates'
+description: ''
+author: 'Matthew Scharley'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  changeset-folder:
+    description: 'Which folder to store your changesets in'
+    required: false
+    default: '.changeset'
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  created-changeset:
+    description: 'Whether a new changeset was created or not'
 
 runs:
   using: node20

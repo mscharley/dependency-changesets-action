@@ -1,26 +1,23 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import { getEvent } from './event'
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  try {
-    const ms: string = core.getInput('milliseconds')
+	// Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
+	const event = await getEvent()
+	if (event.pull_request.state !== 'open') {
+		core.debug('Short-circuiting as it appears this pull request is not open anymore')
+	}
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+	const changesetFolder: string = core.getInput('changeset-folder')
+	core.debug(`Writing changesets to ${changesetFolder}`)
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+	const name = `dependencies-GH-${event.number}.md`
+	core.debug(`Writing changeset named ${name}`)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
-  }
+	// Set outputs for other workflow steps to use
+	core.setOutput('created-changeset', false)
 }
