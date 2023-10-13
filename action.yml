@@ -8,6 +8,9 @@ inputs:
     description: 'Which folder to store your changesets in'
     required: false
     default: '.changeset'
+  token:
+    description: 'A Github access token used to push commits back to the PR'
+    required: true
 
 # Define your outputs here.
 outputs:
