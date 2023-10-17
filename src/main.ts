@@ -84,20 +84,18 @@ export async function run(): Promise<void> {
 					owner,
 					repo,
 					ref: event.pull_request.head.ref,
-					path
+					path,
+					mediaType: {
+						format: 'raw'
+					}
 				})
 
-				if (
-					Array.isArray(packageJsonResponse.data) ||
-					!('content' in packageJsonResponse.data) ||
-					!('encoding' in packageJsonResponse.data && packageJsonResponse.data.encoding === 'base64')
-				) {
+				if (typeof packageJsonResponse.data !== 'string') {
 					throw new Error(
 						`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`
 					)
 				}
-				const content: string = packageJsonResponse.data.content
-				const packageJson = JSON.parse(content) as { name?: string }
+				const packageJson = JSON.parse(packageJsonResponse.data) as { name?: string }
 
 				return [path, packageJson.name] as const
 			})
