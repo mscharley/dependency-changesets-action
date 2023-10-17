@@ -84,10 +84,7 @@ export async function run(): Promise<void> {
 					owner,
 					repo,
 					ref: event.pull_request.head.ref,
-					path,
-					mediaType: {
-						format: 'raw'
-					}
+					path
 				})
 
 				if (
