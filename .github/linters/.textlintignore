@@ -1,2 +1,0 @@
-# Don't lint output files as these are generated files
-dist/**
