@@ -1,7 +1,4 @@
-# Changesets for Renovate
-
-[![GitHub Super-Linter](https://github.com/mscharley/dependency-changeset-actions/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/mscharley/dependency-changeset-actions/actions/workflows/ci.yml/badge.svg)
+# Changesets for dependency updaters
 
 This action aims to bring support for the [changesets][changesets] release management software to [Mend
 Renovate][renovate] and other dependency updating services.
