@@ -19,9 +19,10 @@ index 03e8948..8560b41 100644
        - name: Setup Node.js
          uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
 `,
-				'.changesets/foo.md'
+				'.changeset/hello-world.md'
 			)
 		).toEqual({
+			foundChangeset: false,
 			packageFiles: []
 		})
 	})
@@ -55,10 +56,29 @@ index 0c63967..4733d7e 100644
         }
  }
 `,
-				'.changesets/foo.md'
+				'.changeset/hello-world.md'
 			)
 		).toEqual({
+			foundChangeset: false,
 			packageFiles: ['package.json', 'dummy/package.json']
+		})
+	})
+
+	it('detects an existing changeset', () => {
+		expect(
+			parsePatch(
+				`
+diff --git a/package.json b/package.json
+index 0c63967..4733d7e 100644
+--- a/.changeset/hello-world.md
++++ b/.changeset/hello-world.md
+@@ -96,6 +96,6 @@
+`,
+				'.changeset/hello-world.md'
+			)
+		).toEqual({
+			foundChangeset: true,
+			packageFiles: []
 		})
 	})
 })

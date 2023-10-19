@@ -29743,6 +29743,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getEvent = void 0;
 const promises_1 = __nccwpck_require__(3977);
 const getEvent = async () => {
+    if (process.env.GITHUB_EVENT_PATH == null) {
+        throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?');
+    }
     const event = JSON.parse((await (0, promises_1.readFile)(process.env.GITHUB_EVENT_PATH)).toString('utf-8'));
     if (!('pull_request' in event)) {
         throw new Error("Event doesn't have a pull_request available.");

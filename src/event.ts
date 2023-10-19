@@ -28,7 +28,11 @@ export interface PullRequest {
 }
 
 export const getEvent = async (): Promise<PullRequest> => {
-	const event: object = JSON.parse((await readFile(process.env.GITHUB_EVENT_PATH!)).toString('utf-8'))
+	if (process.env.GITHUB_EVENT_PATH == null) {
+		throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?')
+	}
+
+	const event: object = JSON.parse((await readFile(process.env.GITHUB_EVENT_PATH)).toString('utf-8'))
 
 	if (!('pull_request' in event)) {
 		throw new Error("Event doesn't have a pull_request available.")
