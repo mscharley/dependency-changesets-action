@@ -29909,13 +29909,10 @@ async function run() {
                 format: 'raw'
             }
         });
-        if (Array.isArray(packageJsonResponse.data) ||
-            !('content' in packageJsonResponse.data) ||
-            !('encoding' in packageJsonResponse.data && packageJsonResponse.data.encoding === 'base64')) {
+        if (typeof packageJsonResponse.data !== 'string') {
             throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
         }
-        const content = packageJsonResponse.data.content;
-        const packageJson = JSON.parse(content);
+        const packageJson = JSON.parse(packageJsonResponse.data);
         return [path, packageJson.name];
     })));
     core.debug(`Mapping for packages: ${JSON.stringify(packageMap)}`);
