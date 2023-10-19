@@ -73,7 +73,7 @@ Some important notes:
 1. This example uses `pull_request_target` which is necessary to get access to secrets. This type of workflow comes with
    some [security concerns][gh-pull_request_target]. This workflow is safe as presented, but be aware of the gotchas if
    you want to add other actions into the same workflow.
-2. This workflow will only run on pull requests with the `dependencies` label. The examples below includes configuration
+1. This workflow will only run on pull requests with the `dependencies` label. The examples below includes configuration
    to get this working. You can use any filter you like, but it is important that you have some semi-reliable filter on
    this workflow so that it only runs for dependency updates.
 
@@ -84,9 +84,9 @@ Some important notes:
 ```jsonc
 // renovate.json
 {
-  "extends": [":label(dependencies)"],
-  "automergeType": "pr",
-  "gitIgnoredAuthors": ["github+renovate@scharley.me"]
+	"extends": [":label(dependencies)"],
+	"automergeType": "pr",
+	"gitIgnoredAuthors": ["github+renovate@scharley.me"]
 }
 ```
 
