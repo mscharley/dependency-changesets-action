@@ -1,199 +1,106 @@
-# Create a JavaScript Action Using TypeScript
+# Changesets for Renovate
 
-[![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
+[![GitHub Super-Linter](https://github.com/mscharley/dependency-changeset-actions/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
+![CI](https://github.com/mscharley/dependency-changeset-actions/actions/workflows/ci.yml/badge.svg)
 
-Use this template to bootstrap the creation of a TypeScript action. :rocket:
+This action aims to bring support for the [changesets][changesets] release management software to [Mend
+Renovate][renovate] and other dependency updating services.
 
-This template includes compilation support, tests, a validation workflow,
-publishing, and versioning guidance.
-
-If you are new, there's also a simpler introduction in the
-[Hello world JavaScript action repository](https://github.com/actions/hello-world-javascript-action).
-
-## Create Your Own Action
-
-To create your own action, you can use this repository as a template! Just
-follow the below instructions:
-
-1. Click the **Use this template** button at the top of the repository
-1. Select **Create a new repository**
-1. Select an owner and name for your new repository
-1. Click **Create repository**
-1. Clone your new repository
-
-## Initial Setup
-
-After you've cloned the repository to your local machine or codespace, you'll
-need to perform some initial setup steps before you can develop your action.
-
-> [!NOTE]
->
-> You'll need to have a reasonably modern version of
-> [Node.js](https://nodejs.org) handy. If you are using a version manager like
-> [`nodenv`](https://github.com/nodenv/nodenv) or
-> [`nvm`](https://github.com/nvm-sh/nvm), you can run `nodenv install` in the
-> root of your repository to install the version specified in
-> [`package.json`](./package.json). Otherwise, 20.x or later should work!
-
-1. :hammer_and_wrench: Install the dependencies
-
-   ```bash
-   npm install
-   ```
-
-1. :building_construction: Package the TypeScript for distribution
-
-   ```bash
-   npm run bundle
-   ```
-
-1. :white_check_mark: Run the tests
-
-   ```bash
-   $ npm test
-
-   PASS  ./index.test.js
-     ✓ throws invalid number (3ms)
-     ✓ wait 500 ms (504ms)
-     ✓ test runs (95ms)
-
-   ...
-   ```
-
-## Update the Action Metadata
-
-The [`action.yml`](action.yml) file defines metadata about your action, such as
-input(s) and output(s). For details about this file, see
-[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
-
-When you copy this repository, update `action.yml` with the name, description,
-inputs, and outputs for your action.
-
-## Update the Action Code
-
-The [`src/`](./src/) directory is the heart of your action! This contains the
-source code that will be run when your action is invoked. You can replace the
-contents of this directory with your own code.
-
-There are a few things to keep in mind when writing your action code:
-
-- Most GitHub Actions toolkit and CI/CD operations are processed asynchronously.
-  In `main.ts`, you will see that the action is run in an `async` function.
-
-  ```javascript
-  import * as core from '@actions/core'
-  //...
-
-  async function run() {
-    try {
-      //...
-    } catch (error) {
-      core.setFailed(error.message)
-    }
-  }
-  ```
-
-  For more information about the GitHub Actions toolkit, see the
-  [documentation](https://github.com/actions/toolkit/blob/master/README.md).
-
-So, what are you waiting for? Go ahead and start customizing your action!
-
-1. Create a new branch
-
-   ```bash
-   git checkout -b releases/v1
-   ```
-
-1. Replace the contents of `src/` with your action code
-1. Add tests to `__tests__/` for your source code
-1. Format, test, and build the action
-
-   ```bash
-   npm run all
-   ```
-
-   > [!WARNING]
-   >
-   > This step is important! It will run [`ncc`](https://github.com/vercel/ncc)
-   > to build the final JavaScript action code with all dependencies included.
-   > If you do not run this step, your action will not work correctly when it is
-   > used in a workflow. This step also includes the `--license` option for
-   > `ncc`, which will create a license file for all of the production node
-   > modules used in your project.
-
-1. Commit your changes
-
-   ```bash
-   git add .
-   git commit -m "My first action is ready!"
-   ```
-
-1. Push them to your repository
-
-   ```bash
-   git push -u origin releases/v1
-   ```
-
-1. Create a pull request and get feedback on your action
-1. Merge the pull request into the `main` branch
-
-Your action is now published! :rocket:
-
-For information about versioning your action, see
-[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-in the GitHub Actions toolkit.
-
-## Validate the Action
-
-You can now validate the action by referencing it in a workflow file. For
-example, [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an
-action in the same repository.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v3
-
-  - name: Test Local Action
-    id: test-action
-    uses: ./
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
-```
-
-For example workflow runs, check out the
-[Actions tab](https://github.com/actions/typescript-action/actions)! :rocket:
+This action will watch for pull requests from these services and add a changeset if appropriate for that update.
 
 ## Usage
 
-After testing, you can create version tag(s) that developers can use to
-reference different stable versions of your action. For more information, see
-[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-in the GitHub Actions toolkit.
+```yaml
+- uses: mscharley/dependency-changesets-action@v1.0.0
+  with:
+    # Personal access token (PAT) used to update the pull request. Using a PAT is highly recommended as it will allow
+    # Github Actions to run any actions you have configured to run.
+    #
+    # If using a PAT, the only required permission is "Contents" to read the contents of the PR and potentially push a
+    # commit back to the branch.
+    #
+    # [Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)
+    #
+    # Default: ${{ github.token }}
+    token: ''
 
-To include the action in a workflow in another repository, you can use the
-`uses` syntax with the `@` symbol to reference a specific branch, tag, or commit
-hash.
+    # The folder to look for changesets in and to write update changesets into.
+    changeset-folder: '.changeset'
+
+    # Whether to use semantic commit messages by the dependency service to determine the type of changeset to create.
+    use-semantic-commits: true
+
+    # The commit message to use when committing a changeset.
+    commit-message: 'chore(deps): changeset for dependency update'
+
+    # Provide a custom author for the commit.
+    #
+    # This can be useful for some services, for example Renovate has a configuration to ignore certain authors so that
+    # the pushes made by this action don't invalidate the check it does that no extra commits have been added to the PR.
+    #
+    # Default: no custom author
+    author-name: ''
+    author-email: ''
+```
+
+### Full workflow example
 
 ```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v3
+name: Add changeset to Renovate updates
 
-  - name: Test Local Action
-    id: test-action
-    uses: actions/typescript-action@v1 # Commit with the `v1` tag
-    with:
-      milliseconds: 1000
+on:
+  pull_request_target:
+    types: [opened, synchronize, labeled]
 
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
+jobs:
+  update:
+    name: Update Renovate PR
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+
+    steps:
+      - name: Update PR
+        uses: mscharley/dependency-changesets-action@v1.0.0
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_GITHUB_TOKEN }}
+          use-semantic-commits: true
+          author-name: Renovate Changesets
+          author-email: github+renovate@scharley.me
 ```
+
+Some important notes:
+
+1. This example uses `pull_request_target` which is necessary to get access to secrets. This type of workflow comes with
+   some [security concerns][gh-pull_request_target]. This workflow is safe as presented, but be aware of the gotchas if
+   you want to add other actions into the same workflow.
+2. This workflow will only run on pull requests with the `dependencies` label. The examples below includes configuration
+   to get this working. You can use any filter you like, but it is important that you have some semi-reliable filter on
+   this workflow so that it only runs for dependency updates.
+
+## Supported dependency updaters
+
+### Renovate
+
+```jsonc
+// renovate.json
+{
+  "extends": [":label(dependencies)"],
+  "automergeType": "pr",
+  "gitIgnoredAuthors": ["github+renovate@scharley.me"]
+}
+```
+
+### Others
+
+Others are likely able to be used with this Action as well, it doesn't rely on any particular feature of the updater
+service - these are the services we've tested and know work. If you've got an example for another service then please
+reach out so we can add it to the list!
+
+## License
+
+The scripts and documentation in this project are released under the [MIT License][license]
+
+[changesets]: https://github.com/changesets/changesets#readme
+[renovate]: https://github.com/apps/renovate
+[gh-pull_request_target]: https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+[license]: https://github.com/mscharley/dependency-changesets-action/blob/main/LICENSE
