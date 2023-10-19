@@ -1,18 +1,35 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Add a changeset for dependency updates'
+description: ''
+author: 'Matthew Scharley'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  changeset-folder:
+    description: 'Which folder to store your changesets in'
+    required: false
+    default: '.changeset'
+  token:
+    description: 'A Github access token used to push commits back to the PR'
+    required: false
+  use-semantic-commits:
+    description: 'Whether to respect semantic commit prefixes'
+    required: false
+    default: 'true'
+  commit-message:
+    description: 'The message to use for commits'
+    required: false
+    default: 'chore(deps): changeset for dependency update'
+  author-name:
+    description: 'The name of the author to use when committing'
+    required: false
+  author-email:
+    description: 'The email for the author to use when committing'
+    required: false
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  created-changeset:
+    description: 'Whether a new changeset was created or not'
 
 runs:
   using: node20
