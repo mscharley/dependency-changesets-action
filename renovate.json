@@ -1,47 +1,4 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": [
-		"config:best-practices",
-		":pinOnlyDevDependencies",
-		"schedule:weekends",
-		":automergeMinor",
-		":semanticCommits",
-		":rebaseStalePrs",
-		":label(dependencies)",
-		"npm:unpublishSafe"
-	],
-	"automergeStrategy": "fast-forward",
-	"transitiveRemediation": true,
-	"ignorePaths": ["**/examples/**"],
-	"gitIgnoredAuthors": ["github+renovate@scharley.me"],
-	"packageRules": [
-		{
-			"matchPackageNames": ["@types/node", "node"],
-			"groupName": "node",
-			"allowedVersions": "^18.0.0 || ^20.0.0",
-			"major": {
-				"enabled": true,
-				"semanticCommitType": "fix"
-			}
-		},
-		{
-			"matchPackageNames": ["typescript"],
-			"major": {
-				"semanticCommitType": "fix"
-			},
-			"minor": {
-				"semanticCommitType": "fix"
-			}
-		},
-		{
-			"matchPackageNames": ["@microsoft/api-documenter", "@microsoft/api-extractor"],
-			"groupName": "api-extractor",
-			"additionalBranchPrefix": ""
-		},
-		{
-			"matchPackageNames": ["@mscharley/eslint-config", "@mscharley/prettier-config"],
-			"groupName": "eslint packages",
-			"additionalBranchPrefix": ""
-		}
-	]
+	"extends": ["github>mscharley/renovate-config"]
 }
