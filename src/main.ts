@@ -95,9 +95,9 @@ export async function run(): Promise<void> {
 						`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`
 					)
 				}
-				const packageJson = JSON.parse(packageJsonResponse.data) as { name?: string }
+				const packageJson = JSON.parse(packageJsonResponse.data) as { name?: string; workspaces?: string[] }
 
-				return [path, packageJson.name] as const
+				return [path, packageJson.workspaces == null ? packageJson.name : undefined] as const
 			})
 		)
 	)
