@@ -29916,7 +29916,7 @@ async function run() {
             throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
         }
         const packageJson = JSON.parse(packageJsonResponse.data);
-        return [path, packageJson.name];
+        return [path, packageJson.workspaces == null ? packageJson.name : undefined];
     })));
     core.debug(`Mapping for packages: ${JSON.stringify(packageMap)}`);
     const packages = Object.values(packageMap).filter((v) => v != null);
