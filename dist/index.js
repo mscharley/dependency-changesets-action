@@ -29884,7 +29884,7 @@ async function run() {
     core.debug(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(changesetFolder, name);
     console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`);
-    core.debug(`Fetching patch`);
+    core.debug(`Fetching patch: ${event.pull_request.patch_url}`);
     const octokit = github.getOctokit(core.getInput('token'));
     const patchResponse = await octokit.request({
         url: event.pull_request.patch_url

@@ -58,7 +58,7 @@ export async function run(): Promise<void> {
 	const outputPath = joinPath(changesetFolder, name)
 	console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`)
 
-	core.debug(`Fetching patch`)
+	core.debug(`Fetching patch: ${event.pull_request.patch_url}`)
 	const octokit = github.getOctokit(core.getInput('token'))
 	const patchResponse = await octokit.request({
 		url: event.pull_request.patch_url
