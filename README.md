@@ -50,7 +50,7 @@ on:
     types: [opened, synchronize, labeled]
 
 jobs:
-  update:
+  renovate:
     name: Update Renovate PR
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'dependencies')
