@@ -29891,11 +29891,13 @@ async function run() {
         owner,
         pull_number: event.number,
         mediaType: {
-            format: 'application/vnd.github.patch'
+            format: 'diff'
         }
     });
     if (typeof patchResponse.data !== 'string') {
-        throw new Error("Patch from Github isn't a string");
+        core.debug(typeof patchResponse.data);
+        core.debug(JSON.stringify(patchResponse.data, undefined, 2));
+        throw new Error(`Patch from Github isn't a string`);
     }
     const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, outputPath);
     if (patch.foundChangeset) {
