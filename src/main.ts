@@ -58,12 +58,20 @@ export async function run(): Promise<void> {
 	const outputPath = joinPath(changesetFolder, name)
 	console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`)
 
-	core.debug(`Fetching patch: ${event.pull_request.patch_url}`)
+	core.debug(`Fetching patch`)
 	const octokit = github.getOctokit(core.getInput('token'))
-	const patchResponse = await octokit.request({
-		url: event.pull_request.patch_url
+	const patchResponse = await octokit.rest.pulls.get({
+		repo,
+		owner,
+		pull_number: event.number,
+		mediaType: {
+			format: 'application/vnd.github.patch'
+		}
 	})
-	const patch = parsePatch(patchResponse.data as string, outputPath)
+	if (typeof patchResponse.data !== 'string') {
+		throw new Error("Patch from Github isn't ")
+	}
+	const patch = parsePatch(patchResponse.data as unknown as string, outputPath)
 	if (patch.foundChangeset) {
 		console.log('Changeset has already been pushed')
 		core.setOutput('created-changeset', false)
