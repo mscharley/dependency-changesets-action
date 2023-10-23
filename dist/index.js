@@ -29884,11 +29884,19 @@ async function run() {
     core.debug(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(changesetFolder, name);
     console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`);
-    core.debug(`Fetching patch: ${event.pull_request.patch_url}`);
+    core.debug(`Fetching patch`);
     const octokit = github.getOctokit(core.getInput('token'));
-    const patchResponse = await octokit.request({
-        url: event.pull_request.patch_url
+    const patchResponse = await octokit.rest.pulls.get({
+        repo,
+        owner,
+        pull_number: event.number,
+        mediaType: {
+            format: 'application/vnd.github.patch'
+        }
     });
+    if (typeof patchResponse.data !== 'string') {
+        throw new Error("Patch from Github isn't a string");
+    }
     const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, outputPath);
     if (patch.foundChangeset) {
         console.log('Changeset has already been pushed');

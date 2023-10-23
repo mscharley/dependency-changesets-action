@@ -69,7 +69,7 @@ export async function run(): Promise<void> {
 		}
 	})
 	if (typeof patchResponse.data !== 'string') {
-		throw new Error("Patch from Github isn't ")
+		throw new Error("Patch from Github isn't a string")
 	}
 	const patch = parsePatch(patchResponse.data as unknown as string, outputPath)
 	if (patch.foundChangeset) {
