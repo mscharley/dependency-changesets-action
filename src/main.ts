@@ -9,6 +9,8 @@ const parseSemanticCommitMessage = (message: string): 'minor' | 'patch' | 'none'
 		return 'patch'
 	} else if (message.startsWith('feat')) {
 		return 'minor'
+	} else if (message.includes('(major)')) {
+		return 'minor'
 	}
 
 	return 'none'
