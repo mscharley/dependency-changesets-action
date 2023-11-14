@@ -34,15 +34,15 @@ jobs:
 
       - name: Initialize CodeQL
         id: initialize
-        uses: github/codeql-action/init@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2
+        uses: github/codeql-action/init@v2.22.5
         with:
           languages: ${{ matrix.language }}
           source-root: src
 
       - name: Autobuild
         id: autobuild
-        uses: github/codeql-action/autobuild@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2
+        uses: github/codeql-action/autobuild@v2.22.5
 
       - name: Perform CodeQL Analysis
         id: analyze
-        uses: github/codeql-action/analyze@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2
+        uses: github/codeql-action/analyze@v2.22.5
