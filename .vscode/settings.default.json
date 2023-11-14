@@ -1,0 +1,7 @@
+{
+	"eslint.options": {
+		"useEslintrc": false,
+		"overrideConfig": { "extends": ["./.github/linters/.eslintrc.yml"] }
+	},
+	"typescript.tsdk": "node_modules/typescript/lib"
+}

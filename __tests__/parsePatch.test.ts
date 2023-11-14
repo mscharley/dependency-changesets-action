@@ -1,4 +1,4 @@
-import { parsePatch } from '../src/parsePatch'
+import { parsePatch } from '../src/parsePatch';
 
 describe('parsePatch', () => {
 	it('parses a patch file with no package.json', () => {
@@ -19,13 +19,13 @@ index 03e8948..8560b41 100644
        - name: Setup Node.js
          uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
 `,
-				'.changeset/hello-world.md'
-			)
+				'.changeset/hello-world.md',
+			),
 		).toEqual({
 			foundChangeset: false,
-			packageFiles: []
-		})
-	})
+			packageFiles: [],
+		});
+	});
 
 	it('parses a patch file with updates', () => {
 		expect(
@@ -56,13 +56,13 @@ index 0c63967..4733d7e 100644
         }
  }
 `,
-				'.changeset/hello-world.md'
-			)
+				'.changeset/hello-world.md',
+			),
 		).toEqual({
 			foundChangeset: false,
-			packageFiles: ['package.json', 'dummy/package.json']
-		})
-	})
+			packageFiles: ['package.json', 'dummy/package.json'],
+		});
+	});
 
 	it('detects an existing changeset', () => {
 		expect(
@@ -74,11 +74,11 @@ index 0c63967..4733d7e 100644
 +++ b/.changeset/hello-world.md
 @@ -96,6 +96,6 @@
 `,
-				'.changeset/hello-world.md'
-			)
+				'.changeset/hello-world.md',
+			),
 		).toEqual({
 			foundChangeset: true,
-			packageFiles: []
-		})
-	})
-})
+			packageFiles: [],
+		});
+	});
+});
