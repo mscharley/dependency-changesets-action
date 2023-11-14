@@ -1,5 +1,8 @@
 name: 'Add a changeset for dependency updates'
-description: ''
+description: "Github Action to publish changesets to dependency update PR's"
+branding:
+  icon: package
+  color: purple
 author: 'Matthew Scharley'
 
 # Define your inputs here.
