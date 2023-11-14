@@ -29747,7 +29747,7 @@ const getEvent = async () => {
         throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?');
     }
     const event = JSON.parse((await (0, promises_1.readFile)(process.env.GITHUB_EVENT_PATH)).toString('utf-8'));
-    if (!('pull_request' in event)) {
+    if (!(typeof event === 'object' && event != null && 'pull_request' in event)) {
         throw new Error("Event doesn't have a pull_request available.");
     }
     return event;
@@ -29757,86 +29757,19 @@ exports.getEvent = getEvent;
 
 /***/ }),
 
-/***/ 6144:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line github/no-then
-(0, main_1.run)().catch(error => {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error) {
-        core.setFailed(error);
-    }
-    else {
-        core.setFailed(`${error}`);
-    }
-});
-
-
-/***/ }),
-
 /***/ 399:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
+const core_1 = __nccwpck_require__(2186);
 const event_1 = __nccwpck_require__(1213);
-const parsePatch_1 = __nccwpck_require__(2421);
+const github_1 = __nccwpck_require__(5438);
 const node_path_1 = __nccwpck_require__(9411);
+const parsePatch_1 = __nccwpck_require__(2421);
+const DEBUG_INDENT = 2;
 const parseSemanticCommitMessage = (message) => {
     if (message.startsWith('fix')) {
         return 'patch';
@@ -29847,8 +29780,8 @@ const parseSemanticCommitMessage = (message) => {
     return 'none';
 };
 const getAuthor = () => {
-    const name = core.getInput('author-name');
-    const email = core.getInput('author-email');
+    const name = (0, core_1.getInput)('author-name');
+    const email = (0, core_1.getInput)('author-email');
     if (name === '' || email === '') {
         return undefined;
     }
@@ -29870,57 +29803,57 @@ async function run() {
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
-    core.debug(`Processing PR #${event.number}: ${event.pull_request.title}`);
-    const useSemanticCommits = core.getBooleanInput('use-semantic-commits');
+    (0, core_1.debug)(`Processing PR #${event.number}: ${event.pull_request.title}`);
+    const useSemanticCommits = (0, core_1.getBooleanInput)('use-semantic-commits');
     const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
     if (updateType === 'none') {
         console.log('Detected an update type of none, skipping this PR');
-        core.setOutput('created-changeset', false);
+        (0, core_1.setOutput)('created-changeset', false);
         return;
     }
-    const changesetFolder = core.getInput('changeset-folder');
-    core.debug(`Writing changesets to ${changesetFolder}`);
+    const changesetFolder = (0, core_1.getInput)('changeset-folder');
+    (0, core_1.debug)(`Writing changesets to ${changesetFolder}`);
     const name = `dependencies-GH-${event.number}.md`;
-    core.debug(`Writing changeset named ${name}`);
+    (0, core_1.debug)(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(changesetFolder, name);
     console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`);
-    core.debug(`Fetching patch`);
-    const octokit = github.getOctokit(core.getInput('token'));
+    (0, core_1.debug)('Fetching patch');
+    const octokit = (0, github_1.getOctokit)((0, core_1.getInput)('token'));
     const patchResponse = await octokit.rest.pulls.get({
         repo,
         owner,
         pull_number: event.number,
         mediaType: {
-            format: 'diff'
-        }
+            format: 'diff',
+        },
     });
     if (typeof patchResponse.data !== 'string') {
-        core.debug(typeof patchResponse.data);
-        core.debug(JSON.stringify(patchResponse.data, undefined, 2));
-        throw new Error(`Patch from Github isn't a string`);
+        (0, core_1.debug)(typeof patchResponse.data);
+        (0, core_1.debug)(JSON.stringify(patchResponse.data, undefined, DEBUG_INDENT));
+        throw new Error("Patch from Github isn't a string");
     }
     const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, outputPath);
     if (patch.foundChangeset) {
         console.log('Changeset has already been pushed');
-        core.setOutput('created-changeset', false);
+        (0, core_1.setOutput)('created-changeset', false);
         return;
     }
     if (patch.packageFiles.length < 1) {
         console.log('No package.json files were updated');
-        core.setOutput('created-changeset', false);
+        (0, core_1.setOutput)('created-changeset', false);
         return;
     }
     console.log('Found patched package files:', patch.packageFiles);
     const packageMap = Object.fromEntries(await Promise.all(patch.packageFiles.map(async (path) => {
-        core.debug(`Fetching package from ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
+        (0, core_1.debug)(`Fetching package from ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
         const packageJsonResponse = await octokit.rest.repos.getContent({
             owner,
             repo,
             ref: event.pull_request.head.ref,
             path,
             mediaType: {
-                format: 'raw'
-            }
+                format: 'raw',
+            },
         });
         if (typeof packageJsonResponse.data !== 'string') {
             throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
@@ -29928,25 +29861,25 @@ async function run() {
         const packageJson = JSON.parse(packageJsonResponse.data);
         return [path, packageJson.workspaces == null ? packageJson.name : undefined];
     })));
-    core.debug(`Mapping for packages: ${JSON.stringify(packageMap)}`);
+    (0, core_1.debug)(`Mapping for packages: ${JSON.stringify(packageMap)}`);
     const packages = Object.values(packageMap).filter((v) => v != null);
     const changeset = `---
-${packages.map(p => `"${p}": ${updateType}\n`).join('')}---
+${packages.map((p) => `"${p}": ${updateType}\n`).join('')}---
 
 ${event.pull_request.title}
 `;
-    core.debug('Pushing changeset to Github');
-    octokit.rest.repos.createOrUpdateFileContents({
+    (0, core_1.debug)('Pushing changeset to Github');
+    await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         branch: event.pull_request.head.ref,
         path: outputPath,
-        message: core.getInput('commit-message'),
+        message: (0, core_1.getInput)('commit-message'),
         content: Buffer.from(changeset, 'utf8').toString('base64'),
-        author: getAuthor()
+        author: getAuthor(),
     });
     // Set outputs for other workflow steps to use
-    core.setOutput('created-changeset', true);
+    (0, core_1.setOutput)('created-changeset', true);
 }
 exports.run = run;
 
@@ -29962,10 +29895,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parsePatch = void 0;
 const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
 const parsePatch = (patch, changesetFile) => {
-    const changed = [...patch.matchAll(changedFiles)].map(match => match[1]);
+    const changed = [...patch.matchAll(changedFiles)].map((match) => match[1]);
     return {
-        packageFiles: changed.filter(f => f === 'package.json' || f.endsWith('/package.json')),
-        foundChangeset: changed.includes(changesetFile)
+        packageFiles: changed.filter((f) => f === 'package.json' || f.endsWith('/package.json')),
+        foundChangeset: changed.includes(changesetFile),
     };
 };
 exports.parsePatch = parsePatch;
@@ -30251,12 +30184,28 @@ module.exports = require("zlib");
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const main_1 = __nccwpck_require__(399);
+const core_1 = __nccwpck_require__(2186);
+// eslint-disable-next-line github/no-then
+(0, main_1.run)().catch((error) => {
+    // Fail the workflow run if an error occurs
+    if (error instanceof Error) {
+        (0, core_1.setFailed)(error);
+    }
+    else {
+        (0, core_1.setFailed)(`${error}`);
+    }
+});
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
