@@ -15,7 +15,10 @@ inputs:
     description: 'A Github access token used to push commits back to the PR'
     required: false
   use-semantic-commits:
-    description: 'Whether to respect semantic commit prefixes'
+    description: 'Deprecated: use use-conventional-commits instead'
+    required: false
+  use-conventional-commits:
+    description: 'Whether to respect conventional commit prefixes'
     required: false
     default: 'true'
   commit-message:

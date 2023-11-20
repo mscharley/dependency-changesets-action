@@ -24,8 +24,9 @@ This action will watch for pull requests from these services and add a changeset
     # The folder to look for changesets in and to write update changesets into.
     changeset-folder: '.changeset'
 
-    # Whether to use semantic commit messages by the dependency service to determine the type of changeset to create.
-    use-semantic-commits: true
+    # Whether to use conventional commit messages by the dependency service to determine the type of changeset to
+    # create.
+    use-conventional-commits: true
 
     # The commit message to use when committing a changeset.
     commit-message: 'chore(deps): changeset for dependency update'
@@ -60,7 +61,7 @@ jobs:
         uses: mscharley/dependency-changesets-action@v1.0.0
         with:
           token: ${{ secrets.DEPENDENCY_UPDATE_GITHUB_TOKEN }}
-          use-semantic-commits: true
+          use-conventional-commits: true
           author-name: Renovate Changesets
           author-email: github+renovate@scharley.me
 ```
