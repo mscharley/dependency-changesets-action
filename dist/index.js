@@ -29864,6 +29864,7 @@ exports.parseInput = void 0;
 const core_1 = __nccwpck_require__(2186);
 const debugJson_1 = __nccwpck_require__(3562);
 const github_1 = __nccwpck_require__(5438);
+const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
 const getAuthor = () => {
     const name = (0, core_1.getInput)('author-name');
     const email = (0, core_1.getInput)('author-email');
@@ -29873,7 +29874,7 @@ const getAuthor = () => {
     return { name, email };
 };
 const parseInput = () => {
-    const hasSemanticCommitConfig = 'INPUT_USE-SEMANTIC-COMMITS' in process.env;
+    const hasSemanticCommitConfig = process.env[USE_SEMANTIC_COMMITS] != null && process.env[USE_SEMANTIC_COMMITS] !== '';
     if (hasSemanticCommitConfig) {
         (0, core_1.warning)('The use-semantic-commits option was renamed to use-conventional-commits and will be removed at some point');
     }

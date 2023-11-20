@@ -2,6 +2,8 @@ import { getBooleanInput, getInput, warning } from '@actions/core';
 import { debugJson } from './debugJson';
 import { getOctokit } from '@actions/github';
 
+const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
+
 export interface ActionInput {
 	author?: {
 		name: string;
@@ -24,7 +26,7 @@ const getAuthor = (): undefined | { name: string; email: string } => {
 };
 
 export const parseInput = (): ActionInput => {
-	const hasSemanticCommitConfig = 'INPUT_USE-SEMANTIC-COMMITS' in process.env;
+	const hasSemanticCommitConfig = process.env[USE_SEMANTIC_COMMITS] != null && process.env[USE_SEMANTIC_COMMITS] !== '';
 	if (hasSemanticCommitConfig) {
 		warning(
 			'The use-semantic-commits option was renamed to use-conventional-commits and will be removed at some point',
