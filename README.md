@@ -8,7 +8,7 @@ This action will watch for pull requests from these services and add a changeset
 ## Usage
 
 ```yaml
-- uses: mscharley/dependency-changesets-action@v1.0.0
+- uses: mscharley/dependency-changesets-action@v1.0.5
   with:
     # Personal access token (PAT) used to update the pull request. Using a PAT is highly recommended as it will allow
     # Github Actions to run any actions you have configured to run.
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Update PR
-        uses: mscharley/dependency-changesets-action@v1.0.0
+        uses: mscharley/dependency-changesets-action@v1.0.5
         with:
           token: ${{ secrets.DEPENDENCY_UPDATE_GITHUB_TOKEN }}
           use-conventional-commits: true
