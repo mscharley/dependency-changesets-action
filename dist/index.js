@@ -29734,7 +29734,104 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 1213:
+/***/ 3823:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getFile = void 0;
+const core_1 = __nccwpck_require__(2186);
+const getFile = (octokit, owner, repo, ref) => async (path) => {
+    (0, core_1.debug)(`Fetching package from ${owner}/${repo}/${ref}:${path}`);
+    const packageJsonResponse = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        ref,
+        path,
+        mediaType: {
+            format: 'raw',
+        },
+    });
+    if (typeof packageJsonResponse.data !== 'string') {
+        throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${ref}:${path}`);
+    }
+    const packageJson = JSON.parse(packageJsonResponse.data);
+    return [path, packageJson];
+};
+exports.getFile = getFile;
+
+
+/***/ }),
+
+/***/ 1990:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPrPatch = void 0;
+const core_1 = __nccwpck_require__(2186);
+const debugJson_1 = __nccwpck_require__(3562);
+const getPrPatch = async (octokit, owner, repo, pullNumber) => {
+    const patchResponse = await octokit.rest.pulls.get({
+        repo,
+        owner,
+        pull_number: pullNumber,
+        mediaType: {
+            format: 'diff',
+        },
+    });
+    if (typeof patchResponse.data !== 'string') {
+        (0, core_1.debug)(typeof patchResponse.data);
+        (0, debugJson_1.debugJson)('data', patchResponse.data);
+        throw new Error("Patch from Github isn't a string");
+    }
+    return patchResponse.data;
+};
+exports.getPrPatch = getPrPatch;
+
+
+/***/ }),
+
+/***/ 4897:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parsePatch = void 0;
+const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
+const parsePatch = (patch, changesetFile) => {
+    const changed = [...patch.matchAll(changedFiles)].map((match) => match[1]);
+    return {
+        packageFiles: changed.filter((f) => f === 'package.json' || f.endsWith('/package.json')),
+        foundChangeset: changed.includes(changesetFile),
+    };
+};
+exports.parsePatch = parsePatch;
+
+
+/***/ }),
+
+/***/ 3562:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.debugJson = void 0;
+const core_1 = __nccwpck_require__(2186);
+const DEBUG_INDENT = 2;
+const debugJson = (message, obj) => {
+    (0, core_1.debug)(`${message}: ${JSON.stringify(obj, undefined, DEBUG_INDENT)}`);
+};
+exports.debugJson = debugJson;
+
+
+/***/ }),
+
+/***/ 9362:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -29757,6 +29854,48 @@ exports.getEvent = getEvent;
 
 /***/ }),
 
+/***/ 5123:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseInput = void 0;
+const core_1 = __nccwpck_require__(2186);
+const debugJson_1 = __nccwpck_require__(3562);
+const github_1 = __nccwpck_require__(5438);
+const getAuthor = () => {
+    const name = (0, core_1.getInput)('author-name');
+    const email = (0, core_1.getInput)('author-email');
+    if (name === '' || email === '') {
+        return undefined;
+    }
+    return { name, email };
+};
+const parseInput = () => {
+    const hasSemanticCommitConfig = 'INPUT_USE-SEMANTIC-COMMITS' in process.env;
+    if (hasSemanticCommitConfig) {
+        (0, core_1.warning)('The use-semantic-commits option was renamed to use-conventional-commits and will be removed at some point');
+    }
+    const input = {
+        author: getAuthor(),
+        changesetFolder: (0, core_1.getInput)('changeset-folder', { required: true }),
+        commitMessage: (0, core_1.getInput)('commit-message', { required: true }),
+        useConventionalCommits: hasSemanticCommitConfig
+            ? (0, core_1.getBooleanInput)('use-semantic-commits', { required: true })
+            : (0, core_1.getBooleanInput)('use-conventional-commits', { required: true }),
+    };
+    (0, debugJson_1.debugJson)('input', input);
+    return {
+        ...input,
+        octokit: (0, github_1.getOctokit)((0, core_1.getInput)('token', { required: true })),
+    };
+};
+exports.parseInput = parseInput;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -29765,11 +29904,13 @@ exports.getEvent = getEvent;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core_1 = __nccwpck_require__(2186);
-const event_1 = __nccwpck_require__(1213);
-const github_1 = __nccwpck_require__(5438);
+const debugJson_1 = __nccwpck_require__(3562);
+const getEvent_1 = __nccwpck_require__(9362);
+const getFile_1 = __nccwpck_require__(3823);
+const getPrPatch_1 = __nccwpck_require__(1990);
 const node_path_1 = __nccwpck_require__(9411);
-const parsePatch_1 = __nccwpck_require__(2421);
-const DEBUG_INDENT = 2;
+const parseInput_1 = __nccwpck_require__(5123);
+const parsePatch_1 = __nccwpck_require__(4897);
 const parseSemanticCommitMessage = (message) => {
     if (message.startsWith('fix')) {
         return 'patch';
@@ -29779,60 +29920,38 @@ const parseSemanticCommitMessage = (message) => {
     }
     return 'none';
 };
-const getAuthor = () => {
-    const name = (0, core_1.getInput)('author-name');
-    const email = (0, core_1.getInput)('author-email');
-    if (name === '' || email === '') {
-        return undefined;
-    }
-    return { name, email };
-};
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    const event = await (0, event_1.getEvent)();
+    const event = await (0, getEvent_1.getEvent)();
     if (event.pull_request.state !== 'open') {
-        console.log('Short-circuiting as it appears this pull request is not open anymore');
+        console.log(`Short-circuiting as it appears this pull request is not open: ${event.pull_request.state}`);
         return;
     }
+    const { author, changesetFolder, commitMessage, octokit, useConventionalCommits } = (0, parseInput_1.parseInput)();
     const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
     const repo = event.pull_request.base.repo.name;
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
     (0, core_1.debug)(`Processing PR #${event.number}: ${event.pull_request.title}`);
-    const useSemanticCommits = (0, core_1.getBooleanInput)('use-semantic-commits');
-    const updateType = useSemanticCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
+    const updateType = useConventionalCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
     if (updateType === 'none') {
         console.log('Detected an update type of none, skipping this PR');
         (0, core_1.setOutput)('created-changeset', false);
         return;
     }
-    const changesetFolder = (0, core_1.getInput)('changeset-folder');
     (0, core_1.debug)(`Writing changesets to ${changesetFolder}`);
     const name = `dependencies-GH-${event.number}.md`;
     (0, core_1.debug)(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(changesetFolder, name);
-    console.log(`Creating changeset: ${owner}/${repo}/${event.pull_request.head.ref}:${outputPath}`);
+    console.log(`Creating changeset: ${owner}/${repo}#${event.pull_request.head.ref}:${outputPath}`);
     (0, core_1.debug)('Fetching patch');
-    const octokit = (0, github_1.getOctokit)((0, core_1.getInput)('token'));
-    const patchResponse = await octokit.rest.pulls.get({
-        repo,
-        owner,
-        pull_number: event.number,
-        mediaType: {
-            format: 'diff',
-        },
-    });
-    if (typeof patchResponse.data !== 'string') {
-        (0, core_1.debug)(typeof patchResponse.data);
-        (0, core_1.debug)(JSON.stringify(patchResponse.data, undefined, DEBUG_INDENT));
-        throw new Error("Patch from Github isn't a string");
-    }
-    const patch = (0, parsePatch_1.parsePatch)(patchResponse.data, outputPath);
+    const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, event.number);
+    const patch = (0, parsePatch_1.parsePatch)(patchString, outputPath);
     if (patch.foundChangeset) {
         console.log('Changeset has already been pushed');
         (0, core_1.setOutput)('created-changeset', false);
@@ -29843,26 +29962,18 @@ async function run() {
         (0, core_1.setOutput)('created-changeset', false);
         return;
     }
-    console.log('Found patched package files:', patch.packageFiles);
-    const packageMap = Object.fromEntries(await Promise.all(patch.packageFiles.map(async (path) => {
-        (0, core_1.debug)(`Fetching package from ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
-        const packageJsonResponse = await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            ref: event.pull_request.head.ref,
-            path,
-            mediaType: {
-                format: 'raw',
-            },
-        });
-        if (typeof packageJsonResponse.data !== 'string') {
-            throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${event.pull_request.head.ref}:${path}`);
+    (0, debugJson_1.debugJson)('Found patched package files', patch.packageFiles);
+    const packageMap = Object.fromEntries((await Promise.all(patch.packageFiles.map((0, getFile_1.getFile)(octokit, owner, repo, event.pull_request.head.ref)))).flatMap(([path, p]) => {
+        const validPackage = p.workspaces == null;
+        if (!validPackage || p.name == null) {
+            return [];
         }
-        const packageJson = JSON.parse(packageJsonResponse.data);
-        return [path, packageJson.workspaces == null ? packageJson.name : undefined];
-    })));
-    (0, core_1.debug)(`Mapping for packages: ${JSON.stringify(packageMap)}`);
-    const packages = Object.values(packageMap).filter((v) => v != null);
+        else {
+            return [[path, p.name]];
+        }
+    }));
+    (0, debugJson_1.debugJson)('Mapping for packages', packageMap);
+    const packages = Object.values(packageMap);
     const changeset = `---
 ${packages.map((p) => `"${p}": ${updateType}\n`).join('')}---
 
@@ -29874,34 +29985,14 @@ ${event.pull_request.title}
         repo,
         branch: event.pull_request.head.ref,
         path: outputPath,
-        message: (0, core_1.getInput)('commit-message'),
+        message: commitMessage,
         content: Buffer.from(changeset, 'utf8').toString('base64'),
-        author: getAuthor(),
+        author,
     });
     // Set outputs for other workflow steps to use
     (0, core_1.setOutput)('created-changeset', true);
 }
 exports.run = run;
-
-
-/***/ }),
-
-/***/ 2421:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parsePatch = void 0;
-const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
-const parsePatch = (patch, changesetFile) => {
-    const changed = [...patch.matchAll(changedFiles)].map((match) => match[1]);
-    return {
-        packageFiles: changed.filter((f) => f === 'package.json' || f.endsWith('/package.json')),
-        foundChangeset: changed.includes(changesetFile),
-    };
-};
-exports.parsePatch = parsePatch;
 
 
 /***/ }),
