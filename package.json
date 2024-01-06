@@ -69,8 +69,8 @@
 		"@actions/github": "^6.0.0"
 	},
 	"devDependencies": {
-		"@mscharley/eslint-config": "3.0.5",
-		"@mscharley/prettier-config": "3.0.1",
+		"@mscharley/eslint-config": "3.0.6",
+		"@mscharley/prettier-config": "3.0.2",
 		"@types/jest": "29.5.11",
 		"@types/node": "20.10.6",
 		"@vercel/ncc": "0.38.1",
