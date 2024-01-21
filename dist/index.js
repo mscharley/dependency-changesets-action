@@ -30670,7 +30670,7 @@ exports.generateChangeset = void 0;
 const core_1 = __nccwpck_require__(2186);
 const debugJson_1 = __nccwpck_require__(3562);
 const parseConventionalCommitMessage_1 = __nccwpck_require__(8522);
-const generateChangeset = (event, input, patch, packageFiles) => {
+const generateChangeset = (event, input, changesets, patch, packageFiles) => {
     (0, core_1.debug)(`Processing PR #${event.number}: ${event.pull_request.title}`);
     const updateType = input.useConventionalCommits ? (0, parseConventionalCommitMessage_1.parseConventionalCommitMessage)(event.pull_request.title) : 'patch';
     if (updateType === 'none') {
@@ -30681,14 +30681,13 @@ const generateChangeset = (event, input, patch, packageFiles) => {
         console.log('Changeset has already been pushed');
         return null;
     }
-    if (packageFiles.length < 1) {
-        console.log('No package.json files were updated');
-        return null;
-    }
     (0, debugJson_1.debugJson)('Found patched package files', packageFiles);
+    const ignoredPackages = changesets.ignore ?? [];
+    (0, debugJson_1.debugJson)('Found ignored packages', ignoredPackages);
     const packageMap = Object.fromEntries(packageFiles.flatMap(([path, p]) => {
-        const validPackage = p.workspaces == null;
-        if (!validPackage || p.name == null) {
+        const isMetaPackage = p.workspaces != null;
+        const isIgnored = ignoredPackages.includes(p.name ?? '');
+        if (isMetaPackage || isIgnored || p.name == null) {
             return [];
         }
         else {
@@ -30697,6 +30696,10 @@ const generateChangeset = (event, input, patch, packageFiles) => {
     }));
     (0, debugJson_1.debugJson)('Mapping for packages', packageMap);
     const affectedPackages = Object.values(packageMap);
+    if (affectedPackages.length < 1) {
+        console.log('No package.json files were updated');
+        return null;
+    }
     return {
         affectedPackages,
         message: event.pull_request.title,
@@ -30885,6 +30888,7 @@ const generateChangeset_1 = __nccwpck_require__(7431);
 const getEvent_1 = __nccwpck_require__(9362);
 const getFile_1 = __nccwpck_require__(9103);
 const getPrPatch_1 = __nccwpck_require__(7433);
+const ChangesetsConfiguration_1 = __nccwpck_require__(205);
 const NpmPackage_1 = __nccwpck_require__(5091);
 const node_path_1 = __nccwpck_require__(9411);
 const parseInput_1 = __nccwpck_require__(5123);
@@ -30903,6 +30907,7 @@ async function run() {
     const { octokit, ...input } = (0, parseInput_1.parseInput)();
     const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
     const repo = event.pull_request.base.repo.name;
+    const ref = event.pull_request.head.ref;
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
@@ -30914,12 +30919,13 @@ async function run() {
     (0, core_1.debug)('Fetching patch');
     const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, event.number);
     const patch = (0, parsePatch_1.parsePatch)(patchString, outputPath);
-    const packageFiles = await Promise.allSettled(patch.packageFiles.map((0, getFile_1.getFile)(octokit, owner, repo, event.pull_request.head.ref, NpmPackage_1.isNpmPackage)));
+    const packageFiles = await Promise.allSettled(patch.packageFiles.map((0, getFile_1.getFile)(octokit, owner, repo, ref, NpmPackage_1.isNpmPackage)));
     const errs = packageFiles.filter((v) => v.status === 'rejected');
     if (errs.length > 0) {
         throw new AggregateError(errs.map((v) => v.reason));
     }
-    const changeset = (0, generateChangeset_1.generateChangeset)(event, input, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
+    const changesets = await (0, getFile_1.getFile)(octokit, owner, repo, ref, ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
+    const changeset = (0, generateChangeset_1.generateChangeset)(event, input, changesets, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
     if (changeset == null) {
         (0, core_1.setOutput)('created-changeset', false);
         return;
@@ -30933,7 +30939,7 @@ ${event.pull_request.title}
     await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
-        branch: event.pull_request.head.ref,
+        branch: ref,
         path: outputPath,
         message: input.commitMessage,
         content: Buffer.from(content, 'utf8').toString('base64'),
@@ -30943,6 +30949,24 @@ ${event.pull_request.title}
     (0, core_1.setOutput)('created-changeset', true);
 }
 exports.run = run;
+
+
+/***/ }),
+
+/***/ 205:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isChangesetsConfiguration = void 0;
+/* eslint-disable @typescript-eslint/no-type-alias */
+const generic_type_guard_1 = __nccwpck_require__(4273);
+exports.isChangesetsConfiguration = new generic_type_guard_1.IsInterface()
+    .withOptionalProperties({
+    ignore: (0, generic_type_guard_1.isArray)(generic_type_guard_1.isString),
+})
+    .get();
 
 
 /***/ }),

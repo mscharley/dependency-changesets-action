@@ -1,4 +1,5 @@
 import type { ActionInput } from './io/parseInput';
+import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration';
 import { debug } from '@actions/core';
 import { debugJson } from './io/debugJson';
 import type { NpmPackage } from './model/NpmPackage';
@@ -15,6 +16,7 @@ export interface Changeset {
 export const generateChangeset = (
 	event: PullRequest,
 	input: Omit<ActionInput, 'octokit'>,
+	changesets: ChangesetsConfiguration,
 	patch: Omit<PatchResults, 'packageFiles'>,
 	packageFiles: Array<[string, NpmPackage]>,
 ): Changeset | null => {
@@ -29,16 +31,15 @@ export const generateChangeset = (
 		console.log('Changeset has already been pushed');
 		return null;
 	}
-	if (packageFiles.length < 1) {
-		console.log('No package.json files were updated');
-		return null;
-	}
 	debugJson('Found patched package files', packageFiles);
+	const ignoredPackages = changesets.ignore ?? [];
+	debugJson('Found ignored packages', ignoredPackages);
 
 	const packageMap = Object.fromEntries(
 		packageFiles.flatMap(([path, p]): Array<[string, string]> => {
-			const validPackage = p.workspaces == null;
-			if (!validPackage || p.name == null) {
+			const isMetaPackage = p.workspaces != null;
+			const isIgnored = ignoredPackages.includes(p.name ?? '');
+			if (isMetaPackage || isIgnored || p.name == null) {
 				return [];
 			} else {
 				return [[path, p.name]];
@@ -48,6 +49,11 @@ export const generateChangeset = (
 
 	debugJson('Mapping for packages', packageMap);
 	const affectedPackages = Object.values(packageMap);
+
+	if (affectedPackages.length < 1) {
+		console.log('No package.json files were updated');
+		return null;
+	}
 
 	return {
 		affectedPackages,

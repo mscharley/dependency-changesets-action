@@ -1,4 +1,4 @@
-import { input, pr } from './test-utils';
+import { changesets, input, pr } from './test-utils';
 import type { Changeset } from '../generateChangeset';
 import { generateChangeset } from '../generateChangeset';
 
@@ -9,6 +9,7 @@ describe('generateChangeset', () => {
 				generateChangeset(
 					pr({ pull_request: { title: 'chore: hello, world' } }),
 					input({ useConventionalCommits: false }),
+					changesets({}),
 					{ foundChangeset: false },
 					[['package.json', { name: '@mscharley/test' }]],
 				),
@@ -24,6 +25,7 @@ describe('generateChangeset', () => {
 				generateChangeset(
 					pr({ pull_request: { title: 'chore: hello, world' } }),
 					input({ useConventionalCommits: true }),
+					changesets({}),
 					{ foundChangeset: false },
 					[['package.json', { name: '@mscharley/test' }]],
 				),
@@ -36,6 +38,7 @@ describe('generateChangeset', () => {
 			generateChangeset(
 				pr({ pull_request: { title: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
+				changesets({}),
 				{ foundChangeset: false },
 				[],
 			),
@@ -47,6 +50,7 @@ describe('generateChangeset', () => {
 			generateChangeset(
 				pr({ pull_request: { title: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
+				changesets({}),
 				{ foundChangeset: true },
 				[['package.json', { name: '@mscharley/test' }]],
 			),
@@ -58,6 +62,7 @@ describe('generateChangeset', () => {
 			generateChangeset(
 				pr({ pull_request: { title: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
+				changesets({}),
 				{ foundChangeset: false },
 				[
 					['package.json', { name: '@mscharley/meta', workspaces: ['packages/*'] }],
@@ -69,5 +74,17 @@ describe('generateChangeset', () => {
 			message: 'fix: hello, world',
 			updateType: 'patch',
 		});
+	});
+
+	it('will exclude a package if it is listed as an ignored package for changesets', () => {
+		expect(
+			generateChangeset(
+				pr({ pull_request: { title: 'fix: hello, world' } }),
+				input({ useConventionalCommits: true }),
+				changesets({ ignore: ['@mscharley/test'] }),
+				{ foundChangeset: false },
+				[['package.json', { name: '@mscharley/test' }]],
+			),
+		).toBeNull();
 	});
 });

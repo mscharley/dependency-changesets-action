@@ -3,6 +3,7 @@ import { generateChangeset } from './generateChangeset';
 import { getEvent } from './io/getEvent';
 import { getFile } from './io/github/getFile';
 import { getPrPatch } from './io/github/getPrPatch';
+import { isChangesetsConfiguration } from './model/ChangesetsConfiguration';
 import { isNpmPackage } from './model/NpmPackage';
 import { join as joinPath } from 'node:path';
 import { parseInput } from './io/parseInput';
@@ -24,6 +25,7 @@ export async function run(): Promise<void> {
 
 	const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
 	const repo = event.pull_request.base.repo.name;
+	const ref = event.pull_request.head.ref;
 	if (owner == null) {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
@@ -38,16 +40,24 @@ export async function run(): Promise<void> {
 	const patchString = await getPrPatch(octokit, owner, repo, event.number);
 	const patch = parsePatch(patchString, outputPath);
 	const packageFiles = await Promise.allSettled(
-		patch.packageFiles.map(getFile(octokit, owner, repo, event.pull_request.head.ref, isNpmPackage)),
+		patch.packageFiles.map(getFile(octokit, owner, repo, ref, isNpmPackage)),
 	);
 	const errs = packageFiles.filter((v): v is PromiseRejectedResult => v.status === 'rejected');
 	if (errs.length > 0) {
 		throw new AggregateError(errs.map((v) => v.reason as Error));
 	}
+	const changesets = await getFile(
+		octokit,
+		owner,
+		repo,
+		ref,
+		isChangesetsConfiguration,
+	)(`${input.changesetFolder}/config.json`);
 
 	const changeset = generateChangeset(
 		event,
 		input,
+		changesets,
 		patch,
 		packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])),
 	);
@@ -65,7 +75,7 @@ ${event.pull_request.title}
 	await octokit.rest.repos.createOrUpdateFileContents({
 		owner,
 		repo,
-		branch: event.pull_request.head.ref,
+		branch: ref,
 		path: outputPath,
 		message: input.commitMessage,
 		content: Buffer.from(content, 'utf8').toString('base64'),

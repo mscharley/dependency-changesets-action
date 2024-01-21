@@ -1,4 +1,5 @@
 import type { ActionInput } from 'src/io/parseInput';
+import type { ChangesetsConfiguration } from 'src/model/ChangesetsConfiguration';
 import type { PullRequest } from '../io/getEvent';
 
 export declare type DeepPartial<T> =
@@ -15,6 +16,7 @@ export declare type DeepPartial<T> =
 							}
 						: T);
 
-export const pr = (input: DeepPartial<PullRequest>): PullRequest => input as PullRequest;
-
+export const changesets = (inp: DeepPartial<ChangesetsConfiguration>): ChangesetsConfiguration =>
+	inp as ChangesetsConfiguration;
 export const input = (inp: DeepPartial<ActionInput>): ActionInput => inp as ActionInput;
+export const pr = (inp: DeepPartial<PullRequest>): PullRequest => inp as PullRequest;
