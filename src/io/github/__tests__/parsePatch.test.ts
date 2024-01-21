@@ -1,4 +1,4 @@
-import { parsePatch } from '../../../src/io/github/parsePatch';
+import { parsePatch } from '../parsePatch';
 
 describe('parsePatch', () => {
 	it('parses a patch file with no package.json', () => {
