@@ -72,7 +72,7 @@
 		"@mscharley/eslint-config": "3.0.7",
 		"@mscharley/prettier-config": "3.0.3",
 		"@types/jest": "29.5.11",
-		"@types/node": "20.11.13",
+		"@types/node": "20.11.14",
 		"@vercel/ncc": "0.38.1",
 		"eslint-plugin-github": "4.10.1",
 		"eslint-plugin-jest": "27.6.3",
