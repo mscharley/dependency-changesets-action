@@ -1,21 +1,13 @@
 import { debug, setOutput } from '@actions/core';
-import { debugJson } from './io/debugJson';
+import { generateChangeset } from './generateChangeset';
 import { getEvent } from './io/getEvent';
-import { getFile } from './github/getFile';
-import { getPrPatch } from './github/getPrPatch';
+import { getFile } from './io/github/getFile';
+import { getPrPatch } from './io/github/getPrPatch';
+import { isChangesetsConfiguration } from './model/ChangesetsConfiguration';
+import { isNpmPackage } from './model/NpmPackage';
 import { join as joinPath } from 'node:path';
 import { parseInput } from './io/parseInput';
-import { parsePatch } from './github/parsePatch';
-
-const parseSemanticCommitMessage = (message: string): 'minor' | 'patch' | 'none' => {
-	if (message.startsWith('fix')) {
-		return 'patch';
-	} else if (message.startsWith('feat')) {
-		return 'minor';
-	}
-
-	return 'none';
-};
+import { parsePatch } from './io/github/parsePatch';
 
 /**
  * The main function for the action.
@@ -29,74 +21,65 @@ export async function run(): Promise<void> {
 		return;
 	}
 
-	const { author, changesetFolder, commitMessage, octokit, useConventionalCommits } = parseInput();
+	const { octokit, ...input } = parseInput();
 
 	const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
 	const repo = event.pull_request.base.repo.name;
+	const ref = event.pull_request.head.ref;
 	if (owner == null) {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
 
-	debug(`Processing PR #${event.number}: ${event.pull_request.title}`);
-	const updateType = useConventionalCommits ? parseSemanticCommitMessage(event.pull_request.title) : 'patch';
-	if (updateType === 'none') {
-		console.log('Detected an update type of none, skipping this PR');
-		setOutput('created-changeset', false);
-		return;
-	}
-
-	debug(`Writing changesets to ${changesetFolder}`);
+	debug(`Writing changesets to ${input.changesetFolder}`);
 	const name = `dependencies-GH-${event.number}.md`;
 	debug(`Writing changeset named ${name}`);
-	const outputPath = joinPath(changesetFolder, name);
+	const outputPath = joinPath(input.changesetFolder, name);
 	console.log(`Creating changeset: ${owner}/${repo}#${event.pull_request.head.ref}:${outputPath}`);
 
 	debug('Fetching patch');
 	const patchString = await getPrPatch(octokit, owner, repo, event.number);
 	const patch = parsePatch(patchString, outputPath);
-
-	if (patch.foundChangeset) {
-		console.log('Changeset has already been pushed');
-		setOutput('created-changeset', false);
-		return;
-	}
-	if (patch.packageFiles.length < 1) {
-		console.log('No package.json files were updated');
-		setOutput('created-changeset', false);
-		return;
-	}
-	debugJson('Found patched package files', patch.packageFiles);
-
-	const packageMap = Object.fromEntries(
-		(await Promise.all(patch.packageFiles.map(getFile(octokit, owner, repo, event.pull_request.head.ref)))).flatMap(
-			([path, p]): Array<[string, string]> => {
-				const validPackage = p.workspaces == null;
-				if (!validPackage || p.name == null) {
-					return [];
-				} else {
-					return [[path, p.name]];
-				}
-			},
-		),
+	const packageFiles = await Promise.allSettled(
+		patch.packageFiles.map(getFile(octokit, owner, repo, ref, isNpmPackage)),
 	);
+	const errs = packageFiles.filter((v): v is PromiseRejectedResult => v.status === 'rejected');
+	if (errs.length > 0) {
+		throw new AggregateError(errs.map((v) => v.reason as Error));
+	}
+	const changesets = await getFile(
+		octokit,
+		owner,
+		repo,
+		ref,
+		isChangesetsConfiguration,
+	)(`${input.changesetFolder}/config.json`);
 
-	debugJson('Mapping for packages', packageMap);
-	const packages = Object.values(packageMap);
-	const changeset = `---
-${packages.map((p) => `"${p}": ${updateType}\n`).join('')}---
+	const changeset = generateChangeset(
+		event,
+		input,
+		changesets,
+		patch,
+		packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])),
+	);
+	if (changeset == null) {
+		setOutput('created-changeset', false);
+		return;
+	}
+
+	const content = `---
+${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
 
 ${event.pull_request.title}
 `;
-
 	debug('Pushing changeset to Github');
 	await octokit.rest.repos.createOrUpdateFileContents({
 		owner,
 		repo,
-		branch: event.pull_request.head.ref,
+		branch: ref,
 		path: outputPath,
-		message: commitMessage,
-		content: Buffer.from(changeset, 'utf8').toString('base64'),
-		author,
+		message: input.commitMessage,
+		content: Buffer.from(content, 'utf8').toString('base64'),
+		author: input.author,
 	});
 
 	// Set outputs for other workflow steps to use

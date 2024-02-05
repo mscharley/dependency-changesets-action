@@ -1,5 +1,5 @@
 import { debug } from '@actions/core';
-import { debugJson } from '../io/debugJson';
+import { debugJson } from '../debugJson';
 import type { getOctokit } from '@actions/github';
 
 export const getPrPatch = async (
