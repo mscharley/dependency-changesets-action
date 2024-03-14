@@ -1,6 +1,6 @@
-import type { ActionInput } from 'src/io/parseInput';
-import type { ChangesetsConfiguration } from 'src/model/ChangesetsConfiguration';
-import type { PullRequest } from '../io/getEvent';
+import type { Commit, PullRequest } from '../model/Github';
+import type { ActionInput } from '../io/parseInput';
+import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration';
 
 export declare type DeepPartial<T> =
 	| T
@@ -20,3 +20,4 @@ export const changesets = (inp: DeepPartial<ChangesetsConfiguration>): Changeset
 	inp as ChangesetsConfiguration;
 export const input = (inp: DeepPartial<ActionInput>): ActionInput => inp as ActionInput;
 export const pr = (inp: DeepPartial<PullRequest>): PullRequest => inp as PullRequest;
+export const commit = (inp: DeepPartial<Commit>): Commit => inp as Commit;
