@@ -4,6 +4,8 @@ on:
     - cron: '30 1 * * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   stale:
     uses: mscharley/.github/.github/workflows/stale.yml@main
