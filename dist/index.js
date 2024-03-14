@@ -31202,9 +31202,9 @@ exports.generateChangeset = void 0;
 const core_1 = __nccwpck_require__(2186);
 const debugJson_1 = __nccwpck_require__(3562);
 const parseConventionalCommitMessage_1 = __nccwpck_require__(8522);
-const generateChangeset = (event, input, changesets, patch, packageFiles) => {
-    (0, core_1.debug)(`Processing PR #${event.number}: ${event.pull_request.title}`);
-    const updateType = input.useConventionalCommits ? (0, parseConventionalCommitMessage_1.parseConventionalCommitMessage)(event.pull_request.title) : 'patch';
+const generateChangeset = (pr, { commit }, input, changesets, patch, packageFiles) => {
+    (0, core_1.debug)(`Processing PR #${pr.number}: ${pr.title}`);
+    const updateType = input.useConventionalCommits ? (0, parseConventionalCommitMessage_1.parseConventionalCommitMessage)(commit.message) : 'patch';
     if (updateType === 'none') {
         console.log('Detected an update type of none, skipping this PR');
         return null;
@@ -31234,7 +31234,7 @@ const generateChangeset = (event, input, changesets, patch, packageFiles) => {
     }
     return {
         affectedPackages,
-        message: event.pull_request.title,
+        message: commit.message,
         updateType,
     };
 };
@@ -31279,6 +31279,22 @@ const getEvent = async () => {
     return event;
 };
 exports.getEvent = getEvent;
+
+
+/***/ }),
+
+/***/ 553:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCommitLog = void 0;
+const getCommitLog = async (octokit, owner, repo, pr) => {
+    const commits = await octokit.rest.pulls.listCommits({ owner, repo, pull_number: pr.number });
+    return commits.data;
+};
+exports.getCommitLog = getCommitLog;
 
 
 /***/ }),
@@ -31416,7 +31432,9 @@ exports.parseInput = parseInput;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core_1 = __nccwpck_require__(2186);
+const debugJson_1 = __nccwpck_require__(3562);
 const generateChangeset_1 = __nccwpck_require__(7431);
+const getCommitLog_1 = __nccwpck_require__(553);
 const getEvent_1 = __nccwpck_require__(9362);
 const getFile_1 = __nccwpck_require__(9103);
 const getPrPatch_1 = __nccwpck_require__(7433);
@@ -31431,25 +31449,30 @@ const parsePatch_1 = __nccwpck_require__(1133);
  */
 async function run() {
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    const event = await (0, getEvent_1.getEvent)();
-    if (event.pull_request.state !== 'open') {
-        console.log(`Short-circuiting as it appears this pull request is not open: ${event.pull_request.state}`);
+    const { octokit, ...input } = (0, parseInput_1.parseInput)();
+    const { pull_request: pr } = await (0, getEvent_1.getEvent)();
+    if (pr.state !== 'open') {
+        console.log(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
         return;
     }
-    const { octokit, ...input } = (0, parseInput_1.parseInput)();
-    const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
-    const repo = event.pull_request.base.repo.name;
-    const ref = event.pull_request.head.ref;
+    const owner = pr.base.repo.owner?.login ?? pr.base.repo.organization;
+    const repo = pr.base.repo.name;
+    const ref = pr.head.ref;
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
+    const commits = await (0, getCommitLog_1.getCommitLog)(octokit, owner, repo, pr);
+    if (commits.length > 0) {
+        (0, debugJson_1.debugJson)('Refusing to update a PR with multiple commits', commits);
+        return;
+    }
     (0, core_1.debug)(`Writing changesets to ${input.changesetFolder}`);
-    const name = `dependencies-GH-${event.number}.md`;
+    const name = `dependencies-GH-${pr.number}.md`;
     (0, core_1.debug)(`Writing changeset named ${name}`);
     const outputPath = (0, node_path_1.join)(input.changesetFolder, name);
-    console.log(`Creating changeset: ${owner}/${repo}#${event.pull_request.head.ref}:${outputPath}`);
+    console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
     (0, core_1.debug)('Fetching patch');
-    const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, event.number);
+    const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, pr.number);
     const patch = (0, parsePatch_1.parsePatch)(patchString, outputPath);
     const packageFiles = await Promise.allSettled(patch.packageFiles.map((0, getFile_1.getFile)(octokit, owner, repo, ref, NpmPackage_1.isNpmPackage)));
     const errs = packageFiles.filter((v) => v.status === 'rejected');
@@ -31457,7 +31480,7 @@ async function run() {
         throw new AggregateError(errs.map((v) => v.reason));
     }
     const changesets = await (0, getFile_1.getFile)(octokit, owner, repo, ref, ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
-    const changeset = (0, generateChangeset_1.generateChangeset)(event, input, changesets, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
+    const changeset = (0, generateChangeset_1.generateChangeset)(pr, commits[0], input, changesets, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
     if (changeset == null) {
         (0, core_1.setOutput)('created-changeset', false);
         return;
@@ -31465,7 +31488,7 @@ async function run() {
     const content = `---
 ${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
 
-${event.pull_request.title}
+${pr.title}
 `;
     (0, core_1.debug)('Pushing changeset to Github');
     await octokit.rest.repos.createOrUpdateFileContents({
@@ -31529,14 +31552,26 @@ exports.isNpmPackage = new generic_type_guard_1.IsInterface()
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseConventionalCommitMessage = void 0;
+const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
 /**
  * Parses a commit message into a release type
  */
 const parseConventionalCommitMessage = (message) => {
-    if (message.startsWith('fix')) {
+    const match = message.match(conventionalCommit);
+    if (match == null) {
+        return 'none';
+    }
+    const [, type, _scope, major, _msg, body] = match;
+    if ((body ?? '').match(/^BREAKING[- ]CHANGE:/mu) != null) {
+        return 'major';
+    }
+    else if (major === '!') {
+        return 'major';
+    }
+    else if (type === 'fix') {
         return 'patch';
     }
-    else if (message.startsWith('feat')) {
+    else if (type === 'feat') {
         return 'minor';
     }
     return 'none';
