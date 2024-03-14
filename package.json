@@ -70,12 +70,12 @@
 		"generic-type-guard": "^4.0.3"
 	},
 	"devDependencies": {
-		"@mscharley/eslint-config": "3.0.7",
-		"@mscharley/prettier-config": "3.0.3",
+		"@mscharley/eslint-config": "3.1.0",
+		"@mscharley/prettier-config": "3.0.4",
 		"@types/jest": "29.5.12",
 		"@types/node": "20.11.25",
 		"@vercel/ncc": "0.38.1",
-		"eslint-plugin-github": "4.10.1",
+		"eslint-plugin-github": "4.10.2",
 		"eslint-plugin-jest": "27.9.0",
 		"eslint-plugin-jsonc": "2.13.0",
 		"jest": "29.7.0",
