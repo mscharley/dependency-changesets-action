@@ -14,6 +14,6 @@ describe('index', () => {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		require('../index');
 
-		expect(runMock).toHaveBeenCalled();
+		expect(runMock).toHaveBeenCalledWith();
 	});
 });
