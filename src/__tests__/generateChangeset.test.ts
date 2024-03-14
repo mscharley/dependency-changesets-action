@@ -1,4 +1,4 @@
-import { changesets, input, pr } from './test-utils';
+import { changesets, commit, input, pr } from './test-utils';
 import type { Changeset } from '../generateChangeset';
 import { generateChangeset } from '../generateChangeset';
 
@@ -7,7 +7,8 @@ describe('generateChangeset', () => {
 		it('will return a patch if conventional commits is disabled', () => {
 			expect(
 				generateChangeset(
-					pr({ pull_request: { title: 'chore: hello, world' } }),
+					pr({}),
+					commit({ commit: { message: 'chore: hello, world' } }),
 					input({ useConventionalCommits: false }),
 					changesets({}),
 					{ foundChangeset: false },
@@ -23,7 +24,8 @@ describe('generateChangeset', () => {
 		it('will return no changeset for no update', () => {
 			expect(
 				generateChangeset(
-					pr({ pull_request: { title: 'chore: hello, world' } }),
+					pr({}),
+					commit({ commit: { message: 'chore: hello, world' } }),
 					input({ useConventionalCommits: true }),
 					changesets({}),
 					{ foundChangeset: false },
@@ -36,7 +38,8 @@ describe('generateChangeset', () => {
 	it('will return no changeset if there are no affected packages', () => {
 		expect(
 			generateChangeset(
-				pr({ pull_request: { title: 'fix: hello, world' } }),
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
 				changesets({}),
 				{ foundChangeset: false },
@@ -48,7 +51,8 @@ describe('generateChangeset', () => {
 	it('will return no changeset if there is already one detected', () => {
 		expect(
 			generateChangeset(
-				pr({ pull_request: { title: 'fix: hello, world' } }),
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
 				changesets({}),
 				{ foundChangeset: true },
@@ -60,7 +64,8 @@ describe('generateChangeset', () => {
 	it('will exclude a package if it is detected as a workspace metapackage', () => {
 		expect(
 			generateChangeset(
-				pr({ pull_request: { title: 'fix: hello, world' } }),
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
 				changesets({}),
 				{ foundChangeset: false },
@@ -79,7 +84,8 @@ describe('generateChangeset', () => {
 	it('will exclude a package if it is listed as an ignored package for changesets', () => {
 		expect(
 			generateChangeset(
-				pr({ pull_request: { title: 'fix: hello, world' } }),
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
 				input({ useConventionalCommits: true }),
 				changesets({ ignore: ['@mscharley/test'] }),
 				{ foundChangeset: false },

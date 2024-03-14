@@ -1,3 +1,4 @@
+import type { Commit, PullRequest } from './model/Github';
 import type { ActionInput } from './io/parseInput';
 import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration';
 import { debug } from '@actions/core';
@@ -5,7 +6,6 @@ import { debugJson } from './io/debugJson';
 import type { NpmPackage } from './model/NpmPackage';
 import { parseConventionalCommitMessage } from './parseConventionalCommitMessage';
 import type { PatchResults } from './io/github/parsePatch';
-import type { PullRequest } from './io/getEvent';
 
 export interface Changeset {
 	affectedPackages: string[];
@@ -14,14 +14,15 @@ export interface Changeset {
 }
 
 export const generateChangeset = (
-	event: PullRequest,
+	pr: PullRequest,
+	{ commit }: Commit,
 	input: Omit<ActionInput, 'octokit'>,
 	changesets: ChangesetsConfiguration,
 	patch: Omit<PatchResults, 'packageFiles'>,
 	packageFiles: Array<[string, NpmPackage]>,
 ): Changeset | null => {
-	debug(`Processing PR #${event.number}: ${event.pull_request.title}`);
-	const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(event.pull_request.title) : 'patch';
+	debug(`Processing PR #${pr.number}: ${pr.title}`);
+	const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(commit.message) : 'patch';
 	if (updateType === 'none') {
 		console.log('Detected an update type of none, skipping this PR');
 		return null;
@@ -57,7 +58,7 @@ export const generateChangeset = (
 
 	return {
 		affectedPackages,
-		message: event.pull_request.title,
+		message: commit.message,
 		updateType,
 	};
 };

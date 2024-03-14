@@ -1,4 +1,5 @@
 {
+	"jest.jestCommandLine": "${NVM_DIR:-~/.nvm}/nvm-exec npx jest",
 	"eslint.options": {
 		"useEslintrc": false,
 		"overrideConfig": { "extends": ["./.github/linters/.eslintrc.yml"] }

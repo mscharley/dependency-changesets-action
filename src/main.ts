@@ -1,5 +1,7 @@
 import { debug, setOutput } from '@actions/core';
+import { debugJson } from './io/debugJson';
 import { generateChangeset } from './generateChangeset';
+import { getCommitLog } from './io/github/getCommitLog';
 import { getEvent } from './io/getEvent';
 import { getFile } from './io/github/getFile';
 import { getPrPatch } from './io/github/getPrPatch';
@@ -15,29 +17,33 @@ import { parsePatch } from './io/github/parsePatch';
  */
 export async function run(): Promise<void> {
 	// Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-	const event = await getEvent();
-	if (event.pull_request.state !== 'open') {
-		console.log(`Short-circuiting as it appears this pull request is not open: ${event.pull_request.state}`);
+	const { octokit, ...input } = parseInput();
+	const { pull_request: pr } = await getEvent();
+	if (pr.state !== 'open') {
+		console.log(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
 		return;
 	}
 
-	const { octokit, ...input } = parseInput();
-
-	const owner = event.pull_request.base.repo.owner?.login ?? event.pull_request.base.repo.organization;
-	const repo = event.pull_request.base.repo.name;
-	const ref = event.pull_request.head.ref;
+	const owner = pr.base.repo.owner?.login ?? pr.base.repo.organization;
+	const repo = pr.base.repo.name;
+	const ref = pr.head.ref;
 	if (owner == null) {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
 
+	const commits = await getCommitLog(octokit, owner, repo, pr);
+	if (commits.length > 0) {
+		debugJson('Refusing to update a PR with multiple commits', commits);
+		return;
+	}
 	debug(`Writing changesets to ${input.changesetFolder}`);
-	const name = `dependencies-GH-${event.number}.md`;
+	const name = `dependencies-GH-${pr.number}.md`;
 	debug(`Writing changeset named ${name}`);
 	const outputPath = joinPath(input.changesetFolder, name);
-	console.log(`Creating changeset: ${owner}/${repo}#${event.pull_request.head.ref}:${outputPath}`);
+	console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
 
 	debug('Fetching patch');
-	const patchString = await getPrPatch(octokit, owner, repo, event.number);
+	const patchString = await getPrPatch(octokit, owner, repo, pr.number);
 	const patch = parsePatch(patchString, outputPath);
 	const packageFiles = await Promise.allSettled(
 		patch.packageFiles.map(getFile(octokit, owner, repo, ref, isNpmPackage)),
@@ -55,7 +61,8 @@ export async function run(): Promise<void> {
 	)(`${input.changesetFolder}/config.json`);
 
 	const changeset = generateChangeset(
-		event,
+		pr,
+		commits[0],
 		input,
 		changesets,
 		patch,
@@ -69,7 +76,7 @@ export async function run(): Promise<void> {
 	const content = `---
 ${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
 
-${event.pull_request.title}
+${pr.title}
 `;
 	debug('Pushing changeset to Github');
 	await octokit.rest.repos.createOrUpdateFileContents({

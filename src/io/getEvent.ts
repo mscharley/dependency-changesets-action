@@ -1,33 +1,13 @@
+import type { PullRequest } from '../model/Github';
 import { readFile } from 'node:fs/promises';
 
-export interface Ref {
-	ref: string;
-	sha: string;
-	repo: {
-		name: string;
-		organization?: string;
-		owner?: {
-			id: number;
-			login: string;
-		};
-	};
-}
-
-export interface PullRequest {
+// https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
+export interface PullRequestEvent {
 	number: number;
-	pull_request: {
-		_links: {
-			commits: { href: string };
-		};
-		base: Ref;
-		head: Ref;
-		patch_url: string;
-		state: 'open' | 'closed';
-		title: string;
-	};
+	pull_request: PullRequest;
 }
 
-export const getEvent = async (): Promise<PullRequest> => {
+export const getEvent = async (): Promise<PullRequestEvent> => {
 	if (process.env.GITHUB_EVENT_PATH == null) {
 		throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?');
 	}
@@ -38,5 +18,5 @@ export const getEvent = async (): Promise<PullRequest> => {
 		throw new Error("Event doesn't have a pull_request available.");
 	}
 
-	return event as PullRequest;
+	return event as PullRequestEvent;
 };
