@@ -4,7 +4,8 @@ import type { getOctokit } from '@actions/github';
 import type { TypeGuard } from 'generic-type-guard';
 
 export const getFile =
-	<T>(octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string, guard: TypeGuard<T>) =>
+	(octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string) =>
+	<T>(guard: TypeGuard<T>) =>
 	async (path: string): Promise<[string, T]> => {
 		debug(`Fetching package from ${owner}/${repo}/${ref}:${path}`);
 		const packageJsonResponse = await octokit.rest.repos.getContent({

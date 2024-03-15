@@ -31308,7 +31308,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFile = void 0;
 const generic_type_guard_1 = __nccwpck_require__(4273);
 const core_1 = __nccwpck_require__(2186);
-const getFile = (octokit, owner, repo, ref, guard) => async (path) => {
+const getFile = (octokit, owner, repo, ref) => (guard) => async (path) => {
     (0, core_1.debug)(`Fetching package from ${owner}/${repo}/${ref}:${path}`);
     const packageJsonResponse = await octokit.rest.repos.getContent({
         owner,
@@ -31432,17 +31432,13 @@ exports.parseInput = parseInput;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core_1 = __nccwpck_require__(2186);
-const debugJson_1 = __nccwpck_require__(3562);
-const generateChangeset_1 = __nccwpck_require__(7431);
 const getCommitLog_1 = __nccwpck_require__(553);
 const getEvent_1 = __nccwpck_require__(9362);
 const getFile_1 = __nccwpck_require__(9103);
 const getPrPatch_1 = __nccwpck_require__(7433);
 const ChangesetsConfiguration_1 = __nccwpck_require__(205);
-const NpmPackage_1 = __nccwpck_require__(5091);
-const node_path_1 = __nccwpck_require__(9411);
 const parseInput_1 = __nccwpck_require__(5123);
-const parsePatch_1 = __nccwpck_require__(1133);
+const processPullRequest_1 = __nccwpck_require__(4945);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -31461,36 +31457,17 @@ async function run() {
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
+    const getFromGithub = (0, getFile_1.getFile)(octokit, owner, repo, ref);
     const commits = await (0, getCommitLog_1.getCommitLog)(octokit, owner, repo, pr);
-    if (commits.length > 1) {
-        (0, debugJson_1.debugJson)('Refusing to update a PR with more than one commit', commits);
-        return;
-    }
-    (0, core_1.debug)(`Writing changesets to ${input.changesetFolder}`);
-    const name = `dependencies-GH-${pr.number}.md`;
-    (0, core_1.debug)(`Writing changeset named ${name}`);
-    const outputPath = (0, node_path_1.join)(input.changesetFolder, name);
-    console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
-    (0, core_1.debug)('Fetching patch');
+    const changesetsConfig = await getFromGithub(ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
     const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, pr.number);
-    const patch = (0, parsePatch_1.parsePatch)(patchString, outputPath);
-    const packageFiles = await Promise.allSettled(patch.packageFiles.map((0, getFile_1.getFile)(octokit, owner, repo, ref, NpmPackage_1.isNpmPackage)));
-    const errs = packageFiles.filter((v) => v.status === 'rejected');
-    if (errs.length > 0) {
-        throw new AggregateError(errs.map((v) => v.reason));
-    }
-    const changesets = await (0, getFile_1.getFile)(octokit, owner, repo, ref, ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
-    const changeset = (0, generateChangeset_1.generateChangeset)(pr, commits[0], input, changesets, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
+    const changeset = await (0, processPullRequest_1.processPullRequest)(input, owner, repo, pr, patchString, changesetsConfig, commits, getFromGithub);
     if (changeset == null) {
         (0, core_1.setOutput)('created-changeset', false);
         return;
     }
-    const content = `---
-${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
-
-${pr.title}
-`;
     (0, core_1.debug)('Pushing changeset to Github');
+    const { content, outputPath } = changeset;
     await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
@@ -31577,6 +31554,54 @@ const parseConventionalCommitMessage = (message) => {
     return 'none';
 };
 exports.parseConventionalCommitMessage = parseConventionalCommitMessage;
+
+
+/***/ }),
+
+/***/ 4945:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.processPullRequest = void 0;
+const core_1 = __nccwpck_require__(2186);
+const debugJson_1 = __nccwpck_require__(3562);
+const generateChangeset_1 = __nccwpck_require__(7431);
+const NpmPackage_1 = __nccwpck_require__(5091);
+const node_path_1 = __nccwpck_require__(9411);
+const parsePatch_1 = __nccwpck_require__(1133);
+const processPullRequest = async (input, owner, repo, pr, patchString, changesetsConfig, commits, getFile) => {
+    if (commits.length !== 1) {
+        (0, debugJson_1.debugJson)('Refusing to update a PR with more than one commit', commits);
+        return null;
+    }
+    (0, core_1.debug)(`Writing changesets to ${input.changesetFolder}`);
+    const name = `dependencies-GH-${pr.number}.md`;
+    (0, core_1.debug)(`Writing changeset named ${name}`);
+    const outputPath = (0, node_path_1.join)(input.changesetFolder, name);
+    console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
+    (0, core_1.debug)('Fetching patch');
+    const patch = (0, parsePatch_1.parsePatch)(patchString, outputPath);
+    const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(NpmPackage_1.isNpmPackage)));
+    const errs = packageFiles.filter((v) => v.status === 'rejected');
+    if (errs.length > 0) {
+        throw new AggregateError(errs.map((v) => v.reason));
+    }
+    const changeset = (0, generateChangeset_1.generateChangeset)(pr, commits[0], input, changesetsConfig, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
+    if (changeset == null) {
+        return null;
+    }
+    return {
+        content: `---
+${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
+
+${changeset.message}
+`,
+        outputPath,
+    };
+};
+exports.processPullRequest = processPullRequest;
 
 
 /***/ }),

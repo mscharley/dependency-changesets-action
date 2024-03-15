@@ -1,15 +1,11 @@
 import { debug, setOutput } from '@actions/core';
-import { debugJson } from './io/debugJson';
-import { generateChangeset } from './generateChangeset';
 import { getCommitLog } from './io/github/getCommitLog';
 import { getEvent } from './io/getEvent';
 import { getFile } from './io/github/getFile';
 import { getPrPatch } from './io/github/getPrPatch';
 import { isChangesetsConfiguration } from './model/ChangesetsConfiguration';
-import { isNpmPackage } from './model/NpmPackage';
-import { join as joinPath } from 'node:path';
 import { parseInput } from './io/parseInput';
-import { parsePatch } from './io/github/parsePatch';
+import { processPullRequest } from './processPullRequest';
 
 /**
  * The main function for the action.
@@ -31,54 +27,28 @@ export async function run(): Promise<void> {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
 
+	const getFromGithub = getFile(octokit, owner, repo, ref);
 	const commits = await getCommitLog(octokit, owner, repo, pr);
-	if (commits.length > 1) {
-		debugJson('Refusing to update a PR with more than one commit', commits);
-		return;
-	}
-	debug(`Writing changesets to ${input.changesetFolder}`);
-	const name = `dependencies-GH-${pr.number}.md`;
-	debug(`Writing changeset named ${name}`);
-	const outputPath = joinPath(input.changesetFolder, name);
-	console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
+	const changesetsConfig = await getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
 
-	debug('Fetching patch');
 	const patchString = await getPrPatch(octokit, owner, repo, pr.number);
-	const patch = parsePatch(patchString, outputPath);
-	const packageFiles = await Promise.allSettled(
-		patch.packageFiles.map(getFile(octokit, owner, repo, ref, isNpmPackage)),
-	);
-	const errs = packageFiles.filter((v): v is PromiseRejectedResult => v.status === 'rejected');
-	if (errs.length > 0) {
-		throw new AggregateError(errs.map((v) => v.reason as Error));
-	}
-	const changesets = await getFile(
-		octokit,
+	const changeset = await processPullRequest(
+		input,
 		owner,
 		repo,
-		ref,
-		isChangesetsConfiguration,
-	)(`${input.changesetFolder}/config.json`);
-
-	const changeset = generateChangeset(
 		pr,
-		commits[0],
-		input,
-		changesets,
-		patch,
-		packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])),
+		patchString,
+		changesetsConfig,
+		commits,
+		getFromGithub,
 	);
 	if (changeset == null) {
 		setOutput('created-changeset', false);
 		return;
 	}
 
-	const content = `---
-${changeset.affectedPackages.map((p) => `"${p}": ${changeset.updateType}\n`).join('')}---
-
-${pr.title}
-`;
 	debug('Pushing changeset to Github');
+	const { content, outputPath } = changeset;
 	await octokit.rest.repos.createOrUpdateFileContents({
 		owner,
 		repo,
