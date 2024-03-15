@@ -32,8 +32,8 @@ export async function run(): Promise<void> {
 	}
 
 	const commits = await getCommitLog(octokit, owner, repo, pr);
-	if (commits.length > 0) {
-		debugJson('Refusing to update a PR with multiple commits', commits);
+	if (commits.length > 1) {
+		debugJson('Refusing to update a PR with more than one commit', commits);
 		return;
 	}
 	debug(`Writing changesets to ${input.changesetFolder}`);
