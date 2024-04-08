@@ -70,8 +70,8 @@
 		"generic-type-guard": "^4.0.3"
 	},
 	"devDependencies": {
-		"@mscharley/eslint-config": "3.1.0",
-		"@mscharley/prettier-config": "3.0.4",
+		"@mscharley/eslint-config": "3.1.2",
+		"@mscharley/prettier-config": "3.0.5",
 		"@types/jest": "29.5.12",
 		"@types/node": "20.12.4",
 		"@vercel/ncc": "0.38.1",
