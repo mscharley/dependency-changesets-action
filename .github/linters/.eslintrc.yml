@@ -14,8 +14,6 @@ ignorePatterns:
   - '**/coverage/.*'
   - '*.json'
 
-parser: '@typescript-eslint/parser'
-
 parserOptions:
   ecmaVersion: 2023
   sourceType: module
@@ -25,12 +23,8 @@ parserOptions:
 
 extends:
   - plugin:github/recommended
-  - plugin:jest/recommended
   - '@mscharley'
   - '@mscharley/eslint-config/node'
-
-plugins:
-  - jest
 
 rules:
   'camelcase': 'off'
