@@ -32108,7 +32108,6 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const main_1 = __nccwpck_require__(399);
 const core_1 = __nccwpck_require__(2186);
-// eslint-disable-next-line github/no-then
 (0, main_1.run)().catch((error) => {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) {
