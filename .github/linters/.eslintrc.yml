@@ -22,14 +22,9 @@ parserOptions:
     - './tsconfig.json'
 
 extends:
-  - plugin:github/recommended
   - '@mscharley'
   - '@mscharley/eslint-config/node'
 
 rules:
   'camelcase': 'off'
   'no-console': 'off'
-  'eslint-comments/no-use': 'off'
-  'eslint-comments/no-unused-disable': 'off'
-  'filenames/match-regex': 'off'
-  'i18n-text/no-en': 'off'
