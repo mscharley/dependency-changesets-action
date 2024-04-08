@@ -2,7 +2,6 @@
  * Unit tests for the action's entrypoint, src/index.ts
  */
 
-// eslint-disable-next-line import/no-namespace
 import * as main from '../main';
 
 // Mock the action's entrypoint

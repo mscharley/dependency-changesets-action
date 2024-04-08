@@ -8,17 +8,17 @@ const owner = 'mscharley';
 const repo = 'dependency-changesets-action';
 
 const partial = <T>(x: DeepPartial<T>): T => x as T;
-const getFiles =
-	(files: Record<string, unknown>) =>
+const getFiles
+	= (files: Record<string, unknown>) =>
 	<T>() =>
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async (path: string): Promise<[string, T]> => {
-		if (path in files) {
-			return [JSON.stringify(files[path]), files[path] as T];
-		} else {
-			throw new Error('Invalid file requested');
-		}
-	};
+		// eslint-disable-next-line @typescript-eslint/require-await
+			async (path: string): Promise<[string, T]> => {
+				if (path in files) {
+					return [JSON.stringify(files[path]), files[path] as T];
+				} else {
+					throw new Error('Invalid file requested');
+				}
+			};
 
 describe('processPullRequests', () => {
 	it('fails if there are more than one commit', async () => {
