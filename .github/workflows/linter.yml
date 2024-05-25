@@ -42,7 +42,7 @@ jobs:
 
       - name: Lint Code Base
         id: super-linter
-        uses: super-linter/super-linter/slim@56576d491db07c7236b445ab09991ca49d12b0c6 # v6.5.0
+        uses: super-linter/super-linter/slim@5b638caee6ba65e25e07143887b669a1233847a0 # v6.5.1
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
