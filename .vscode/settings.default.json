@@ -1,5 +1,5 @@
 {
-	"jest.jestCommandLine": "${NVM_DIR:-~/.nvm}/nvm-exec npx jest",
+	"jest.jestCommandLine": "${ASDF_DATA_DIR:-~/.asdf}/shims/npx jest",
 	"eslint.options": {
 		"useEslintrc": false,
 		"overrideConfig": { "extends": ["./.github/linters/.eslintrc.yml"] }
