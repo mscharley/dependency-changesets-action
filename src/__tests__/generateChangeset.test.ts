@@ -89,6 +89,23 @@ describe('generateChangeset', () => {
 				input({ useConventionalCommits: true }),
 				changesets({ ignore: ['@mscharley/test'] }),
 				{ foundChangeset: false },
+				[['package.json', { name: '@mscharley/test' }], ['package.json', { name: '@mscharley/test2' }]],
+			),
+		).toMatchObject<Changeset>({
+			affectedPackages: ['@mscharley/test2'],
+			message: 'fix: hello, world',
+			updateType: 'patch',
+		});
+	});
+
+	it('will exclude the changeset if only ignored packages are included', () => {
+		expect(
+			generateChangeset(
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
+				input({ useConventionalCommits: true }),
+				changesets({ ignore: ['@mscharley/test'] }),
+				{ foundChangeset: false },
 				[['package.json', { name: '@mscharley/test' }]],
 			),
 		).toBeNull();

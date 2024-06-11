@@ -1,4 +1,5 @@
 import { debug, setOutput } from '@actions/core';
+import { debugJson } from './io/debugJson';
 import { getCommitLog } from './io/github/getCommitLog';
 import { getEvent } from './io/getEvent';
 import { getFile } from './io/github/getFile';
@@ -30,6 +31,7 @@ export async function run(): Promise<void> {
 	const getFromGithub = getFile(octokit, owner, repo, ref);
 	const commits = await getCommitLog(octokit, owner, repo, pr);
 	const changesetsConfig = await getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
+	debugJson('Changesets configuration', changesetsConfig);
 
 	const patchString = await getPrPatch(octokit, owner, repo, pr.number);
 	const changeset = await processPullRequest(

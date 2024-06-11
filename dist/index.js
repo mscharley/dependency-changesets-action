@@ -31647,6 +31647,7 @@ exports.parseInput = parseInput;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core_1 = __nccwpck_require__(2186);
+const debugJson_1 = __nccwpck_require__(3562);
 const getCommitLog_1 = __nccwpck_require__(553);
 const getEvent_1 = __nccwpck_require__(9362);
 const getFile_1 = __nccwpck_require__(9103);
@@ -31675,6 +31676,7 @@ async function run() {
     const getFromGithub = (0, getFile_1.getFile)(octokit, owner, repo, ref);
     const commits = await (0, getCommitLog_1.getCommitLog)(octokit, owner, repo, pr);
     const changesetsConfig = await getFromGithub(ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
+    (0, debugJson_1.debugJson)('Changesets configuration', changesetsConfig);
     const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, pr.number);
     const changeset = await (0, processPullRequest_1.processPullRequest)(input, owner, repo, pr, patchString, changesetsConfig, commits, getFromGithub);
     if (changeset == null) {
