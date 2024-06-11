@@ -31675,7 +31675,7 @@ async function run() {
     }
     const getFromGithub = (0, getFile_1.getFile)(octokit, owner, repo, ref);
     const commits = await (0, getCommitLog_1.getCommitLog)(octokit, owner, repo, pr);
-    const changesetsConfig = await getFromGithub(ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
+    const [, changesetsConfig] = await getFromGithub(ChangesetsConfiguration_1.isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
     (0, debugJson_1.debugJson)('Changesets configuration', changesetsConfig);
     const patchString = await (0, getPrPatch_1.getPrPatch)(octokit, owner, repo, pr.number);
     const changeset = await (0, processPullRequest_1.processPullRequest)(input, owner, repo, pr, patchString, changesetsConfig, commits, getFromGithub);
