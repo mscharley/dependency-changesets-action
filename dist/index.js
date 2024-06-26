@@ -31739,34 +31739,41 @@ exports.isNpmPackage = new generic_type_guard_1.IsInterface()
 /***/ }),
 
 /***/ 8522:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseConventionalCommitMessage = void 0;
+const core_1 = __nccwpck_require__(2186);
 const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
 /**
  * Parses a commit message into a release type
  */
 const parseConventionalCommitMessage = (message) => {
+    (0, core_1.debug)(`Treating commit message as a conventional commit: ${message}`);
     const match = message.match(conventionalCommit);
     if (match == null) {
         return 'none';
     }
     const [, type, _scope, major, _msg, body] = match;
     if ((body ?? '').match(/^BREAKING[- ]CHANGE:/mu) != null) {
+        (0, core_1.debug)('Treating this commit as a major update.');
         return 'major';
     }
     else if (major === '!') {
+        (0, core_1.debug)('Treating this commit as a major update.');
         return 'major';
     }
     else if (type === 'fix') {
+        (0, core_1.debug)('Treating this commit as a patch update.');
         return 'patch';
     }
     else if (type === 'feat') {
+        (0, core_1.debug)('Treating this commit as a minor update.');
         return 'minor';
     }
+    (0, core_1.debug)('No releaseable change in the commit message, ignoring this commit.');
     return 'none';
 };
 exports.parseConventionalCommitMessage = parseConventionalCommitMessage;
