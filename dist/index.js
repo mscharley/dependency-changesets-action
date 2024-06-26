@@ -31645,7 +31645,7 @@ exports.parseInput = parseInput;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = run;
 const core_1 = __nccwpck_require__(2186);
 const debugJson_1 = __nccwpck_require__(3562);
 const getCommitLog_1 = __nccwpck_require__(553);
@@ -31697,7 +31697,6 @@ async function run() {
     // Set outputs for other workflow steps to use
     (0, core_1.setOutput)('created-changeset', true);
 }
-exports.run = run;
 
 
 /***/ }),
