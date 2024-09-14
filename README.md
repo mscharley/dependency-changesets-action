@@ -84,7 +84,7 @@ Some important notes:
 {
 	"extends": [":label(dependencies)"],
 	"automergeType": "pr",
-	"gitIgnoredAuthors": ["github+renovate@scharley.me"]
+	"gitIgnoredAuthors": ["github+renovate@scharley.me"],
 }
 ```
 
