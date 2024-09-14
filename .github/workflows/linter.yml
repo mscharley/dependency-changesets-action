@@ -47,6 +47,6 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Our ESLint standard enforces prettier for us already.
-          VALIDATE_TYPESCRIPT_STANDARD: false
+          VALIDATE_TYPESCRIPT_PRETTIER: false
           VALIDATE_JSCPD: false
           FILTER_REGEX_EXCLUDE: '.*/dist/.*'
