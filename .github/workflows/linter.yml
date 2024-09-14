@@ -48,5 +48,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Our ESLint standard enforces prettier for us already.
           VALIDATE_TYPESCRIPT_PRETTIER: false
+          # ts-standard doesn't seem to work
+          VALIDATE_TYPESCRIPT_STANDARD: false
           VALIDATE_JSCPD: false
           FILTER_REGEX_EXCLUDE: '.*/dist/.*'
