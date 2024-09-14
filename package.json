@@ -1,7 +1,7 @@
 {
 	"name": "@mscharley/dependency-changesets-action",
 	"description": "Github Action to publish changesets to dependency update PR's",
-	"version": "0.0.0",
+	"version": "0.0.0-development",
 	"author": "Matthew Scharley <matt@scharley.me>",
 	"private": true,
 	"homepage": "https://github.com/mscharley/dependency-changesets-action",
