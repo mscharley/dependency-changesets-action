@@ -31816,7 +31816,7 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
     }
     const filterPrivatePackages = typeof changesetsConfig.privatePackages === 'boolean'
         ? !changesetsConfig.privatePackages
-        : !((changesetsConfig.privatePackages?.tag ?? true) || (changesetsConfig.privatePackages?.version ?? true));
+        : !(changesetsConfig.privatePackages?.version ?? true);
     (0, core_1.debug)(`Filtering private packages: ${filterPrivatePackages}`);
     const validPackageFiles = packageFiles
         .flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))

@@ -40,7 +40,7 @@ export const processPullRequest = async (
 	const filterPrivatePackages
 		= typeof changesetsConfig.privatePackages === 'boolean'
 			? !changesetsConfig.privatePackages
-			: !((changesetsConfig.privatePackages?.tag ?? true) || (changesetsConfig.privatePackages?.version ?? true));
+			: !(changesetsConfig.privatePackages?.version ?? true);
 	debug(`Filtering private packages: ${filterPrivatePackages}`);
 	const validPackageFiles = packageFiles
 		.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))

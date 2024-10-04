@@ -116,7 +116,7 @@ fix: update test package
 		).resolves.toBeNull();
 	});
 
-	it('will not exclude a package if it is marked private and private package are only disabled for version in changesets', async () => {
+	it('will exclude a package if it is marked private and private package are only disabled for version in changesets', async () => {
 		await expect(
 			processPullRequest(
 				partial<ActionInput>({ changesetFolder: '.changeset' }),
@@ -128,21 +128,13 @@ fix: update test package
 					head: { ref: 'update-test' },
 				}),
 				validDiff,
-				partial<ChangesetsConfiguration>({ privatePackages: { version: false, tag: true } }),
+				partial<ChangesetsConfiguration>({ privatePackages: { version: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
 			),
-		).resolves.toMatchObject({
-			content: `---
-"@mscharley/test": patch
----
-
-fix: update test package
-`,
-			outputPath: '.changeset/dependencies-GH-10.md',
-		});
+		).resolves.toBeNull();
 	});
 
 	it('will not exclude a package if it is marked private and private package are only disabled for tag in changesets', async () => {
@@ -157,7 +149,7 @@ fix: update test package
 					head: { ref: 'update-test' },
 				}),
 				validDiff,
-				partial<ChangesetsConfiguration>({ privatePackages: { version: true, tag: false } }),
+				partial<ChangesetsConfiguration>({ privatePackages: { tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
