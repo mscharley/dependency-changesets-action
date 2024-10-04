@@ -31710,9 +31710,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isChangesetsConfiguration = void 0;
 /* eslint-disable @typescript-eslint/no-type-alias */
 const generic_type_guard_1 = __nccwpck_require__(9193);
+// https://github.com/changesets/changesets/blob/main/packages/config/schema.json
 exports.isChangesetsConfiguration = new generic_type_guard_1.IsInterface()
     .withOptionalProperties({
     ignore: (0, generic_type_guard_1.isArray)(generic_type_guard_1.isString),
+    privatePackages: (0, generic_type_guard_1.isUnion)(generic_type_guard_1.isBoolean, new generic_type_guard_1.IsInterface().withOptionalProperties({ tag: generic_type_guard_1.isBoolean, version: generic_type_guard_1.isBoolean }).get()),
 })
     .get();
 
@@ -31732,6 +31734,7 @@ exports.isNpmPackage = new generic_type_guard_1.IsInterface()
     .withOptionalProperties({
     name: generic_type_guard_1.isString,
     workspaces: (0, generic_type_guard_1.isArray)(generic_type_guard_1.isString),
+    private: generic_type_guard_1.isBoolean,
 })
     .get();
 
@@ -31811,7 +31814,14 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
     if (errs.length > 0) {
         throw new AggregateError(errs.map((v) => v.reason));
     }
-    const changeset = (0, generateChangeset_1.generateChangeset)(pr, commits[0], input, changesetsConfig, patch, packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])));
+    const filterPrivatePackages = typeof changesetsConfig.privatePackages === 'boolean'
+        ? !changesetsConfig.privatePackages
+        : !((changesetsConfig.privatePackages?.tag ?? true) || (changesetsConfig.privatePackages?.version ?? true));
+    (0, core_1.debug)(`Filtering private packages: ${filterPrivatePackages}`);
+    const validPackageFiles = packageFiles
+        .flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))
+        .filter(([_, v]) => !filterPrivatePackages || !(v.private ?? false));
+    const changeset = (0, generateChangeset_1.generateChangeset)(pr, commits[0], input, changesetsConfig, patch, validPackageFiles);
     if (changeset == null) {
         return null;
     }
