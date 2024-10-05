@@ -71,7 +71,7 @@
 		"@mscharley/eslint-config": "3.1.5",
 		"@mscharley/prettier-config": "3.0.6",
 		"@types/jest": "29.5.13",
-		"@types/node": "20.16.9",
+		"@types/node": "20.16.10",
 		"@vercel/ncc": "0.38.2",
 		"jest": "29.7.0",
 		"js-yaml": "4.1.0",
