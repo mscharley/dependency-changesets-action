@@ -30,10 +30,6 @@ jobs:
         id: npm-ci
         run: npm ci
 
-      - name: Check Format
-        id: npm-format-check
-        run: npm run format:check
-
       - name: Lint
         id: npm-lint
         run: npm run lint

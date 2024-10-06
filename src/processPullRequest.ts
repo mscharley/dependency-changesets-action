@@ -37,14 +37,16 @@ export const processPullRequest = async (
 		throw new AggregateError(errs.map((v) => v.reason as Error));
 	}
 
-	const changeset = generateChangeset(
-		pr,
-		commits[0],
-		input,
-		changesetsConfig,
-		patch,
-		packageFiles.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : [])),
-	);
+	const filterPrivatePackages
+		= typeof changesetsConfig.privatePackages === 'boolean'
+			? !changesetsConfig.privatePackages
+			: !(changesetsConfig.privatePackages?.version ?? true);
+	debug(`Filtering private packages: ${filterPrivatePackages}`);
+	const validPackageFiles = packageFiles
+		.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))
+		.filter(([_, v]) => !filterPrivatePackages || !(v.private ?? false));
+
+	const changeset = generateChangeset(pr, commits[0], input, changesetsConfig, patch, validPackageFiles);
 	if (changeset == null) {
 		return null;
 	}
