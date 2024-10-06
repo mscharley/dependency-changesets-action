@@ -24,13 +24,14 @@
 		"node": ">=20"
 	},
 	"scripts": {
-		"bundle": "npm run package",
+		"codegen": "graphql-code-generator",
+		"bundle": "npm run codegen && npm run package",
 		"ci-test": "jest",
 		"lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
 		"package": "ncc build src/index.ts --license licenses.txt",
 		"package:watch": "npm run package -- --watch",
 		"test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
-		"all": "npm run lint && npm run test && npm run package"
+		"all": "npm run codegen && npm run lint && npm run test && npm run package"
 	},
 	"license": "MIT",
 	"jest": {
@@ -68,6 +69,7 @@
 		"generic-type-guard": "^4.0.3"
 	},
 	"devDependencies": {
+		"@graphql-codegen/cli": "5.0.2",
 		"@mscharley/eslint-config": "3.1.5",
 		"@mscharley/prettier-config": "3.0.6",
 		"@types/jest": "29.5.13",
@@ -77,7 +79,8 @@
 		"js-yaml": "4.1.0",
 		"make-coverage-badge": "1.2.0",
 		"ts-jest": "29.2.5",
-		"typescript": "5.6.2"
+		"typescript": "5.6.2",
+		"@graphql-codegen/typescript": "4.0.9"
 	},
 	"packageManager": "npm@10.8.3+sha512.d08425c8062f56d43bb8e84315864218af2492eb769e1f1ca40740f44e85bd148969382d651660363942e5909cb7ffcbef7ca0ae963ddc2c57a51243b4da8f56"
 }

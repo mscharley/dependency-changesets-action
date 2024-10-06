@@ -1,0 +1,7 @@
+mutation createCommit($commit: CreateCommitOnBranchInput!) {
+	createCommitOnBranch(input: $commit) {
+		commit {
+			commitUrl
+		}
+	}
+}

@@ -16,6 +16,7 @@ inputs:
     required: false
   use-semantic-commits:
     description: 'Deprecated: use use-conventional-commits instead'
+    deprecationMessage: 'Renamed to `use-conventional-commits`.'
     required: false
   use-conventional-commits:
     description: 'Whether to respect conventional commit prefixes'
@@ -31,6 +32,10 @@ inputs:
   author-email:
     description: 'The email for the author to use when committing'
     required: false
+  sign-commits:
+    description: 'Generate signed commits. This uses a different Github API which conflicts with custom author information.'
+    required: false
+    default: 'false'
 
 # Define your outputs here.
 outputs:

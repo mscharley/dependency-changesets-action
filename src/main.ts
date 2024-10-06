@@ -1,4 +1,6 @@
 import { debug, setOutput } from '@actions/core';
+import { CreateCommitDocument } from './generated/graphql';
+import type { CreateCommitMutationVariables } from './generated/graphql';
 import { debugJson } from './io/debugJson';
 import { getCommitLog } from './io/github/getCommitLog';
 import { getEvent } from './io/getEvent';
@@ -51,15 +53,42 @@ export async function run(): Promise<void> {
 
 	debug('Pushing changeset to Github');
 	const { content, outputPath } = changeset;
-	await octokit.rest.repos.createOrUpdateFileContents({
-		owner,
-		repo,
-		branch: ref,
-		path: outputPath,
-		message: input.commitMessage,
-		content: Buffer.from(content, 'utf8').toString('base64'),
-		author: input.author,
-	});
+	if (input.signCommits) {
+		if (input.author != null) {
+			throw new Error('Custom author information is incompatible with signing commits.');
+		}
+		await octokit.graphql(CreateCommitDocument.toString(), {
+			commit: {
+				clientMutationId: 'mscharley/dependency-changesets-action',
+				branch: {
+					repositoryNameWithOwner: `${owner}/${repo}`,
+					branchName: pr.head.ref,
+				},
+				message: {
+					headline: input.commitMessage,
+				},
+				expectedHeadOid: pr.head.sha,
+				fileChanges: {
+					additions: [
+						{
+							path: outputPath,
+							contents: Buffer.from(content, 'utf8').toString('base64'),
+						},
+					],
+				},
+			},
+		} satisfies CreateCommitMutationVariables);
+	} else {
+		await octokit.rest.repos.createOrUpdateFileContents({
+			owner,
+			repo,
+			branch: ref,
+			path: outputPath,
+			message: input.commitMessage,
+			content: Buffer.from(content, 'utf8').toString('base64'),
+			author: input.author,
+		});
+	}
 
 	// Set outputs for other workflow steps to use
 	setOutput('created-changeset', true);

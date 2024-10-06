@@ -13,6 +13,7 @@ export interface ActionInput {
 	commitMessage: string;
 	octokit: ReturnType<typeof getOctokit>;
 	useConventionalCommits: boolean;
+	signCommits: boolean;
 }
 
 const getAuthor = (): undefined | { name: string; email: string } => {
@@ -40,6 +41,7 @@ export const parseInput = (): ActionInput => {
 		useConventionalCommits: hasSemanticCommitConfig
 			? getBooleanInput('use-semantic-commits', { required: true })
 			: getBooleanInput('use-conventional-commits', { required: true }),
+		signCommits: getBooleanInput('sign-commits', { required: true }),
 	};
 	debugJson('input', input);
 

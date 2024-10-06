@@ -1,0 +1,9 @@
+overwrite: true
+schema: 'https://docs.github.com/public/fpt/schema.docs.graphql'
+documents: ['graphql/github/**/*.graphql']
+emitLegacyCommonJSImports: true
+generates:
+  'src/generated/':
+    preset: 'client'
+    config:
+      documentMode: 'string'
