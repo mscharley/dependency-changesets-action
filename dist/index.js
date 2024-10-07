@@ -7234,932 +7234,6 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
-/***/ 2640:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isIntersection = exports.isUnion = void 0;
-/**
- * Check if a value is a union of two types.
- *
- * @public
- */
-var isUnion = function (ptt, ptu) {
-    return function (o) {
-        return ptt(o) || ptu(o);
-    };
-};
-exports.isUnion = isUnion;
-/**
- * Check if a value is an intersection of two types.
- *
- * @public
- */
-var isIntersection = function (ptt, ptu) {
-    return function (o) {
-        return ptt(o) && ptu(o);
-    };
-};
-exports.isIntersection = isIntersection;
-//# sourceMappingURL=functions.js.map
-
-/***/ }),
-
-/***/ 1669:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__nccwpck_require__(2640), exports);
-__exportStar(__nccwpck_require__(8863), exports);
-__exportStar(__nccwpck_require__(569), exports);
-__exportStar(__nccwpck_require__(1990), exports);
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 1990:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.IsInterface = void 0;
-var o = __importStar(__nccwpck_require__(6737));
-var functions_1 = __nccwpck_require__(2640);
-var primitives_1 = __nccwpck_require__(4851);
-/**
- * Internal class used to represent each step in the building process.
- */
-var InterfaceStep = /** @class */ (function () {
-    function InterfaceStep(ptt) {
-        this.ptt = ptt;
-    }
-    InterfaceStep.prototype.get = function () {
-        var _this = this;
-        return function (obj) { return (0, primitives_1.isObjectLike)(obj) && _this.ptt(obj); };
-    };
-    InterfaceStep.prototype.with = function (ptv) {
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, ptv));
-    };
-    InterfaceStep.prototype.withProperty = function (key, ptv) {
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasProperty(key, ptv)));
-    };
-    InterfaceStep.prototype.withOptionalProperty = function (key, ptv) {
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasOptionalProperty(key, ptv)));
-    };
-    InterfaceStep.prototype.withStringIndexSignature = function (value, enforce) {
-        if (enforce === void 0) { enforce = true; }
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasStringIndexSignature(value, enforce)));
-    };
-    InterfaceStep.prototype.withNumericIndexSignature = function (value, enforce) {
-        if (enforce === void 0) { enforce = true; }
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasNumericIndexSignature(value, enforce)));
-    };
-    InterfaceStep.prototype.withProperties = function (props) {
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasProperties(props)));
-    };
-    InterfaceStep.prototype.withOptionalProperties = function (props) {
-        return new InterfaceStep((0, functions_1.isIntersection)(this.ptt, o.hasOptionalProperties(props)));
-    };
-    return InterfaceStep;
-}());
-/**
- * A small class to help with constructing interface guards.
- *
- * @public
- */
-var IsInterface = /** @class */ (function () {
-    function IsInterface() {
-    }
-    IsInterface.prototype.get = function () {
-        return primitives_1.isObjectLike;
-    };
-    IsInterface.prototype.with = function (ptv) {
-        return new InterfaceStep(ptv);
-    };
-    IsInterface.prototype.withProperty = function (key, ptv) {
-        return new InterfaceStep(o.hasProperty(key, ptv));
-    };
-    IsInterface.prototype.withOptionalProperty = function (key, ptv) {
-        return new InterfaceStep(o.hasOptionalProperty(key, ptv));
-    };
-    IsInterface.prototype.withStringIndexSignature = function (value, enforce) {
-        if (enforce === void 0) { enforce = true; }
-        return new InterfaceStep(o.hasStringIndexSignature(value, enforce));
-    };
-    IsInterface.prototype.withNumericIndexSignature = function (value, enforce) {
-        if (enforce === void 0) { enforce = true; }
-        return new InterfaceStep(o.hasNumericIndexSignature(value, enforce));
-    };
-    IsInterface.prototype.withProperties = function (props) {
-        return new InterfaceStep(o.hasProperties(props));
-    };
-    IsInterface.prototype.withOptionalProperties = function (props) {
-        return new InterfaceStep(o.hasOptionalProperties(props));
-    };
-    return IsInterface;
-}());
-exports.IsInterface = IsInterface;
-//# sourceMappingURL=interface.js.map
-
-/***/ }),
-
-/***/ 569:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.IntersectionOf = void 0;
-var functions_1 = __nccwpck_require__(2640);
-/**
- * A small class to help with constructing larger intersection checkers.
- *
- * @public
- */
-var IntersectionOf = /** @class */ (function () {
-    function IntersectionOf(ptt) {
-        this.ptt = ptt;
-    }
-    /**
-     * Finalise and return the partial type guard for this builder.
-     */
-    IntersectionOf.prototype.get = function () {
-        return this.ptt;
-    };
-    /**
-     * Add a new option for this intersection.
-     */
-    IntersectionOf.prototype.with = function (ptu) {
-        return new IntersectionOf((0, functions_1.isIntersection)(this.ptt, ptu));
-    };
-    return IntersectionOf;
-}());
-exports.IntersectionOf = IntersectionOf;
-//# sourceMappingURL=intersectionof.js.map
-
-/***/ }),
-
-/***/ 8863:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UnionOf = void 0;
-var functions_1 = __nccwpck_require__(2640);
-/**
- * A small class to help with constructing larger union checkers.
- *
- * @public
- */
-var UnionOf = /** @class */ (function () {
-    function UnionOf(ptt) {
-        this.ptt = ptt;
-    }
-    /**
-     * Finalise and return the partial type guard for this builder.
-     */
-    UnionOf.prototype.get = function () {
-        return this.ptt;
-    };
-    /**
-     * Add a new option for this union.
-     */
-    UnionOf.prototype.with = function (ptv) {
-        return new UnionOf((0, functions_1.isUnion)(this.ptt, ptv));
-    };
-    return UnionOf;
-}());
-exports.UnionOf = UnionOf;
-//# sourceMappingURL=unionof.js.map
-
-/***/ }),
-
-/***/ 3191:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-type-alias */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-//# sourceMappingURL=guards.js.map
-
-/***/ }),
-
-/***/ 9193:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__nccwpck_require__(3191), exports);
-__exportStar(__nccwpck_require__(4851), exports);
-__exportStar(__nccwpck_require__(6737), exports);
-__exportStar(__nccwpck_require__(1669), exports);
-__exportStar(__nccwpck_require__(3860), exports);
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 6737:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isExactObject = exports.isLikeObject = exports.hasOptionalProperties = exports.hasOnlyProperties = exports.hasProperties = exports.isInstance = exports.hasNumericIndexSignature = exports.hasStringIndexSignature = exports.isRecord = exports.hasOptionalProperty = exports.hasProperty = void 0;
-var utils_1 = __nccwpck_require__(3860);
-var primitives_1 = __nccwpck_require__(4851);
-/**
- * Validates that a given object has a property of a given type.
- *
- * @public
- */
-var hasProperty = function (property, value) {
-    return function (o) {
-        // If the property exists and conforms to the value type guard.
-        return value(o[property]);
-    };
-};
-exports.hasProperty = hasProperty;
-/**
- * Validates that a given object has an optional property of a given type.
- *
- * @public
- */
-var hasOptionalProperty = function (property, value) {
-    return function (o) {
-        return !(property in o) ||
-            // If the property exists and conforms to the value type guard.
-            value(o[property]);
-    };
-};
-exports.hasOptionalProperty = hasOptionalProperty;
-/**
- * Validate that a variable is an object with a single field.
- *
- * If you need multiple fields then use hasProperties.
- *
- * @public
- */
-var isRecord = function (property, value) {
-    return function (o) {
-        return (0, primitives_1.isObject)(o) && (0, exports.hasProperty)(property, value)(o);
-    };
-};
-exports.isRecord = isRecord;
-/**
- * Validates that a given object has a string index signature.
- *
- * @param enforce - Whether to enforce that there is at least one property already set. Be careful setting this to
- *   false, you will get some unexpected outputs, for instance arrays will have a string index signature.
- *
- * @public
- */
-var hasStringIndexSignature = function (value, enforce) {
-    if (enforce === void 0) { enforce = true; }
-    return function (o) {
-        var n = 0;
-        for (var prop in o) {
-            if (isNaN(parseInt(prop, 10))) {
-                if (value(o[prop])) {
-                    n++;
-                }
-                else {
-                    return false;
-                }
-            }
-        }
-        return !enforce || n > 0;
-    };
-};
-exports.hasStringIndexSignature = hasStringIndexSignature;
-/**
- * Validates that a given object has a numeric index signature.
- *
- * @param enforce - Whether to enforce that there is at least one property already set. Be careful setting this to
- *   false, you will get some unexpected outputs, for instance objects will have a numeric index signature.
- *
- * @public
- */
-var hasNumericIndexSignature = function (value, enforce) {
-    if (enforce === void 0) { enforce = true; }
-    return function (o) {
-        var n = 0;
-        for (var prop in o) {
-            if (!isNaN(parseInt(prop, 10))) {
-                // We still index as a string here because prop is a string.
-                if (value(o[prop])) {
-                    n++;
-                }
-                else {
-                    return false;
-                }
-            }
-        }
-        return !enforce || n > 0;
-    };
-};
-exports.hasNumericIndexSignature = hasNumericIndexSignature;
-/**
- * Validates that a given object is an instance of a class.
- *
- * @public
- */
-var isInstance = function (klass) {
-    return function (o) {
-        return o instanceof klass;
-    };
-};
-exports.isInstance = isInstance;
-/**
- * Validate that a given object has all the given properties
- *
- * @param props - a MappedGuard of the object to be validated, i.e. an object that has the same properties as the
- *    object being validated whose types are TypeGuards for the matching type on the original property.
- *
- * @public
- */
-var hasProperties = function (props) {
-    return function (o) {
-        for (var prop in props) {
-            if (!(0, exports.hasProperty)(prop, props[prop])(o)) {
-                return false;
-            }
-        }
-        return true;
-    };
-};
-exports.hasProperties = hasProperties;
-/**
- * Validate that a given object only has the given properties
- *
- * @param props - A MappedTypeGuard of the object to be validated.
- *
- * @public
- */
-var hasOnlyProperties = function (props) {
-    return function (o) {
-        var found = [];
-        for (var prop in o) {
-            if (prop in props) {
-                var propsKey = prop;
-                if (!(0, exports.hasProperty)(propsKey, props[propsKey])(o)) {
-                    return false;
-                }
-                found.push(propsKey);
-            }
-            else {
-                return false;
-            }
-        }
-        return found.length === Object.keys(props).length;
-    };
-};
-exports.hasOnlyProperties = hasOnlyProperties;
-/**
- * Validate that a given object has all the given optional properties
- *
- * @param props - a MappedGuard of the object to be validated, i.e. an object that has the same properties as the
- *    object being validated whose types are TypeGuards for the matching type on the original property.
- *
- * @public
- */
-var hasOptionalProperties = function (props) {
-    return function (o) {
-        for (var prop in props) {
-            if (!(0, exports.hasOptionalProperty)(prop, props[prop])(o)) {
-                return false;
-            }
-        }
-        return true;
-    };
-};
-exports.hasOptionalProperties = hasOptionalProperties;
-/**
- * Validate that an object has the fields provided.
- *
- * @public
- */
-var isLikeObject = function (props) {
-    return (0, utils_1.combine)(primitives_1.isObject, (0, exports.hasProperties)(props));
-};
-exports.isLikeObject = isLikeObject;
-/**
- * Validate that an object has exactly the fields provided.
- *
- * @public
- */
-var isExactObject = function (props) {
-    return (0, utils_1.combine)(primitives_1.isObject, (0, exports.hasOnlyProperties)(props));
-};
-exports.isExactObject = isExactObject;
-//# sourceMappingURL=objects.js.map
-
-/***/ }),
-
-/***/ 4851:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isNever = exports.isUnknown = exports.isAny = exports.isStringEnumeration = exports.isNumericalEnumeration = exports.isSet = exports.isObject = exports.isObjectLike = exports.isSetOf = exports.narrowArray = exports.narrowValue = exports.isArray = exports.isMissing = exports.isNullable = exports.isOptional = exports.isUndefined = exports.isNull = exports.isBoolean = exports.isSingletonStringUnion = exports.isSingletonString = exports.isString = exports.isSingletonNumberUnion = exports.isSingletonNumber = exports.isElementOf = exports.isNaN = exports.isInfinity = exports.isDouble = exports.isFloat = exports.isFiniteNumber = exports.isNumber = void 0;
-var utils_1 = __nccwpck_require__(3860);
-var MINIMUM_ARRAY_INDEX = 0;
-/**
- * Validate if a value is a javascript number.
- *
- * @public
- */
-var isNumber = function (n) { return typeof n === 'number' && !isNaN(n); };
-exports.isNumber = isNumber;
-/**
- * Validate the value is a finite number.
- *
- * @public
- */
-var isFiniteNumber = function (n) {
-    return typeof n === 'number' && !isNaN(n) && isFinite(n);
-};
-exports.isFiniteNumber = isFiniteNumber;
-/**
- * Validate the value is a number in the rawest sense.
- *
- * This check is exactly what the type system says on the tin. This value is a floating point value with all
- * the edge cases that entails.
- *
- * @public
- */
-var isFloat = function (n) { return typeof n === 'number'; };
-exports.isFloat = isFloat;
-/**
- * Alias for isFloat.
- *
- * @see isFloat()
- * @public
- */
-exports.isDouble = exports.isFloat;
-/**
- * Validate the value is infinite.
- *
- * @public
- */
-var isInfinity = function (n) {
-    return typeof n === 'number' && !isNaN(n) && !isFinite(n);
-};
-exports.isInfinity = isInfinity;
-/**
- * Validates a value is exactly the NaN constant value.
- *
- * @public
- */
-var _isNaN = function (n) { return typeof n === 'number' && isNaN(n); };
-exports.isNaN = _isNaN;
-/**
- * Validates that a value is one of a set of values.
- *
- * @public
- */
-exports.isElementOf = (function () {
-    var ss = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        ss[_i] = arguments[_i];
-    }
-    return function (s) {
-        return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
-    };
-});
-/**
- * Validate if a value is a specific javascript number.
- *
- * @public
- */
-var isSingletonNumber = function (v) {
-    return function (n) {
-        return n === v;
-    };
-};
-exports.isSingletonNumber = isSingletonNumber;
-/**
- * Validate if a value is one of a set of specific numbers.
- *
- * @public
- */
-exports.isSingletonNumberUnion = (function () {
-    var ss = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        ss[_i] = arguments[_i];
-    }
-    return function (s) {
-        return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
-    };
-});
-/**
- * Validate if a value is a string.
- *
- * @public
- */
-var isString = function (s) { return typeof s === 'string'; };
-exports.isString = isString;
-/**
- * Validate if a value is a specific string.
- *
- * @public
- */
-var isSingletonString = function (v) {
-    return function (s) {
-        return s === v;
-    };
-};
-exports.isSingletonString = isSingletonString;
-/**
- * Validate if a value is one of a set of specific strings.
- *
- * @public
- */
-exports.isSingletonStringUnion = (function () {
-    var ss = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        ss[_i] = arguments[_i];
-    }
-    return function (s) {
-        return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
-    };
-});
-/**
- * Validate if a value is a boolean.
- *
- * @public
- */
-var isBoolean = function (b) { return typeof b === 'boolean'; };
-exports.isBoolean = isBoolean;
-/**
- * Validate if a value is the constant null.
- *
- * @public
- */
-var isNull = function (o) { return o === null; };
-exports.isNull = isNull;
-/**
- * Validate if a value is the constant undefined.
- *
- * @public
- */
-var isUndefined = function (u) { return typeof u === 'undefined'; };
-exports.isUndefined = isUndefined;
-/**
- * Validate if a value is optionally a given type.
- *
- * @public
- */
-var isOptional = function (tgt) {
-    return function (o) {
-        return typeof o === 'undefined' || tgt(o);
-    };
-};
-exports.isOptional = isOptional;
-/**
- * Validate if a value is a given type or null.
- *
- * @public
- */
-var isNullable = function (tgt) {
-    return function (o) {
-        return o === null || tgt(o);
-    };
-};
-exports.isNullable = isNullable;
-/**
- * Validates if a value is a given type or null or undefined.
- *
- * @public
- */
-var isMissing = function (tgt) {
-    return function (o) {
-        return o == null || tgt(o);
-    };
-};
-exports.isMissing = isMissing;
-/**
- * Validate if a value is an array of a specific type of value.
- *
- * @public
- */
-var isArray = function (valueCheck) {
-    return function (arr) {
-        return Array.isArray(arr) && arr.reduce(function (acc, v) { return acc && valueCheck(v); }, true);
-    };
-};
-exports.isArray = isArray;
-/**
- * Narrow the type of a value.
- *
- * @public
- * @deprecated Use combine instead, this alias is poorly named.
- */
-var narrowValue = function (ptt, ptu) { return (0, utils_1.combine)(ptt, ptu); };
-exports.narrowValue = narrowValue;
-/**
- * Narrow the type of elements inside an array.
- *
- * @public
- */
-var narrowArray = function (pt) {
-    return function (ts) {
-        return ts.reduce(function (acc, b) { return acc && pt(b); }, true);
-    };
-};
-exports.narrowArray = narrowArray;
-/**
- * Validate if an object is a Set containing elements of a given type.
- *
- * @public
- */
-var isSetOf = function (tg) {
-    return function (o) {
-        return o instanceof Set && Array.of.apply(Array, __spreadArray([], __read(o.values()), false)).reduce(function (acc, v) { return acc && tg(v); }, true);
-    };
-};
-exports.isSetOf = isSetOf;
-/**
- * Validate if a value is like an object.
- *
- * Specifically, this only checks typeof === "object" which includes
- * things that typescript has other primitives for like arrays.
- *
- * @public
- */
-var isObjectLike = function (obj) { return obj != null && typeof obj === 'object'; };
-exports.isObjectLike = isObjectLike;
-/**
- * Validate if a value is an object.
- *
- * @public
- */
-var isObject = function (obj) {
-    return obj != null && typeof obj === 'object' && !(obj instanceof Array);
-};
-exports.isObject = isObject;
-/**
- * Validates if a value is not null and not undefined.
- *
- * @public
- */
-var isSet = function (obj) { return obj != null; };
-exports.isSet = isSet;
-/**
- * Validates if a value is a valid part of a numeric enumeration.
- *
- * @param e - The enumeration to check
- * @param flags - Whether this is a flag style enumeration
- *
- * @public
- */
-var isNumericalEnumeration = function (e, flags) {
-    if (flags === void 0) { flags = false; }
-    var options = Object.values(e).filter(exports.isNumber);
-    if (!flags) {
-        return function (obj) { return options.includes(obj); };
-    }
-    else {
-        return function (obj) {
-            return typeof obj === 'number' &&
-                obj !== 0 &&
-                options.filter(function (v) { return (v & obj) === v; }).reduce(function (acc, v) { return acc | v; }, 0) === obj;
-        };
-    }
-};
-exports.isNumericalEnumeration = isNumericalEnumeration;
-/**
- * Validates if a value is a valid part of a string enumeration.
- *
- * @param e - The enumeration to check
- *
- * @public
- */
-var isStringEnumeration = function (e) {
-    var options = Object.values(e);
-    return function (obj) { return options.includes(obj); };
-};
-exports.isStringEnumeration = isStringEnumeration;
-/**
- * Helper for asserting nothing at all.
- *
- * Note: this is very rarely useful. You probably want isSet. isAny
- * allows null and undefined through as well - it matches TypeScripts type
- * and simply returns a static true because anything is an any.
- *
- * You can use isSet to validate that a value is non-null then let TypeScript
- * widen it back to any in your interface.
- *
- * @public
- */
-var isAny = function (_a) { return true; };
-exports.isAny = isAny;
-/**
- * Alias for isAny.
- *
- * @see isAny
- * @public
- */
-exports.isUnknown = exports.isAny;
-/**
- * Helper for exhaustiveness checking.
- *
- * @public
- */
-var isNever = function (n) {
-    throw Error("Unexpected value when expecting never: ".concat(n));
-};
-exports.isNever = isNever;
-//# sourceMappingURL=primitives.js.map
-
-/***/ }),
-
-/***/ 3860:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.combine = exports.assert = exports.AssertionError = void 0;
-/**
- * Indicates there was an error validating a typeguard.
- *
- * @public
- */
-var AssertionError = /** @class */ (function (_super) {
-    __extends(AssertionError, _super);
-    function AssertionError(value, message) {
-        var _this = _super.call(this, message) || this;
-        _this.value = value;
-        _this.name = _this.constructor.name;
-        return _this;
-    }
-    return AssertionError;
-}(RangeError));
-exports.AssertionError = AssertionError;
-/**
- * Asserts that a guard is successful.
- *
- * This may not work properly in ECMAScript environments that don't fully support ES6. If this is your environment then
- * you should do this check manually and throw your own error.
- *
- * @throws AssertionError if the guard returns false.
- * @public
- */
-var assert = function (value, guard, message) {
-    if (!guard(value)) {
-        throw new AssertionError(value, message !== null && message !== void 0 ? message : "Invalid value provided: ".concat(JSON.stringify(value)));
-    }
-};
-exports.assert = assert;
-/**
- * Helper to string many different typeguards together into something larger.
- *
- * @param guards - A list of partial typeguards to string together.
- *
- * @public
- */
-var combine = function () {
-    var guards = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        guards[_i] = arguments[_i];
-    }
-    return function (v) {
-        var e_1, _a;
-        try {
-            for (var guards_1 = __values(guards), guards_1_1 = guards_1.next(); !guards_1_1.done; guards_1_1 = guards_1.next()) {
-                var guard = guards_1_1.value;
-                if (!guard(v)) {
-                    return false;
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (guards_1_1 && !guards_1_1.done && (_a = guards_1.return)) _a.call(guards_1);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return true;
-    };
-};
-exports.combine = combine;
-//# sourceMappingURL=utils.js.map
-
-/***/ }),
-
 /***/ 3407:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -31521,7 +30595,7 @@ exports.getCommitLog = getCommitLog;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFile = void 0;
-const generic_type_guard_1 = __nccwpck_require__(9193);
+const generic_type_guard_1 = __nccwpck_require__(1149);
 const core_1 = __nccwpck_require__(7484);
 const getFile = (octokit, owner, repo, ref) => (guard) => async (path) => {
     (0, core_1.debug)(`Fetching package from ${owner}/${repo}/${ref}:${path}`);
@@ -31709,7 +30783,7 @@ async function run() {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isChangesetsConfiguration = void 0;
 /* eslint-disable @typescript-eslint/no-type-alias */
-const generic_type_guard_1 = __nccwpck_require__(9193);
+const generic_type_guard_1 = __nccwpck_require__(1149);
 // https://github.com/changesets/changesets/blob/main/packages/config/schema.json
 exports.isChangesetsConfiguration = new generic_type_guard_1.IsInterface()
     .withOptionalProperties({
@@ -31729,7 +30803,7 @@ exports.isChangesetsConfiguration = new generic_type_guard_1.IsInterface()
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isNpmPackage = void 0;
 /* eslint-disable @typescript-eslint/no-type-alias */
-const generic_type_guard_1 = __nccwpck_require__(9193);
+const generic_type_guard_1 = __nccwpck_require__(1149);
 exports.isNpmPackage = new generic_type_guard_1.IsInterface()
     .withOptionalProperties({
     name: generic_type_guard_1.isString,
@@ -32076,6 +31150,569 @@ module.exports = require("worker_threads");
 
 "use strict";
 module.exports = require("zlib");
+
+/***/ }),
+
+/***/ 1149:
+/***/ ((module) => {
+
+"use strict";
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// dist/index.js
+var dist_exports = {};
+__export(dist_exports, {
+  AssertionError: () => AssertionError,
+  IntersectionOf: () => IntersectionOf,
+  IsInterface: () => IsInterface,
+  UnionOf: () => UnionOf,
+  assert: () => assert,
+  combine: () => combine,
+  hasNumericIndexSignature: () => hasNumericIndexSignature,
+  hasOnlyProperties: () => hasOnlyProperties,
+  hasOptionalProperties: () => hasOptionalProperties,
+  hasOptionalProperty: () => hasOptionalProperty,
+  hasProperties: () => hasProperties,
+  hasProperty: () => hasProperty,
+  hasStringIndexSignature: () => hasStringIndexSignature,
+  isAny: () => isAny,
+  isArray: () => isArray,
+  isBoolean: () => isBoolean,
+  isDouble: () => isDouble,
+  isElementOf: () => isElementOf,
+  isExactObject: () => isExactObject,
+  isFiniteNumber: () => isFiniteNumber,
+  isFloat: () => isFloat,
+  isInfinity: () => isInfinity,
+  isInstance: () => isInstance,
+  isIntersection: () => isIntersection,
+  isLikeObject: () => isLikeObject,
+  isMissing: () => isMissing,
+  isNaN: () => _isNaN,
+  isNever: () => isNever,
+  isNull: () => isNull,
+  isNullable: () => isNullable,
+  isNumber: () => isNumber,
+  isNumericalEnumeration: () => isNumericalEnumeration,
+  isObject: () => isObject,
+  isObjectLike: () => isObjectLike,
+  isOptional: () => isOptional,
+  isRecord: () => isRecord,
+  isSet: () => isSet,
+  isSetOf: () => isSetOf,
+  isSingletonNumber: () => isSingletonNumber,
+  isSingletonNumberUnion: () => isSingletonNumberUnion,
+  isSingletonString: () => isSingletonString,
+  isSingletonStringUnion: () => isSingletonStringUnion,
+  isString: () => isString,
+  isStringEnumeration: () => isStringEnumeration,
+  isUndefined: () => isUndefined,
+  isUnion: () => isUnion,
+  isUnknown: () => isUnknown,
+  narrowArray: () => narrowArray,
+  narrowValue: () => narrowValue
+});
+module.exports = __toCommonJS(dist_exports);
+
+// dist/utils.js
+var __extends = /* @__PURE__ */ function() {
+  var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+      d2.__proto__ = b2;
+    } || function(d2, b2) {
+      for (var p in b2) if (Object.prototype.hasOwnProperty.call(b2, p)) d2[p] = b2[p];
+    };
+    return extendStatics(d, b);
+  };
+  return function(d, b) {
+    if (typeof b !== "function" && b !== null)
+      throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+    extendStatics(d, b);
+    function __() {
+      this.constructor = d;
+    }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+var __values = function(o) {
+  var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+  if (m) return m.call(o);
+  if (o && typeof o.length === "number") return {
+    next: function() {
+      if (o && i >= o.length) o = void 0;
+      return { value: o && o[i++], done: !o };
+    }
+  };
+  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var AssertionError = (
+  /** @class */
+  function(_super) {
+    __extends(AssertionError2, _super);
+    function AssertionError2(value, message) {
+      var _this = _super.call(this, message) || this;
+      _this.value = value;
+      _this.name = _this.constructor.name;
+      return _this;
+    }
+    return AssertionError2;
+  }(RangeError)
+);
+var assert = function(value, guard, message) {
+  if (!guard(value)) {
+    throw new AssertionError(value, message !== null && message !== void 0 ? message : "Invalid value provided: ".concat(JSON.stringify(value)));
+  }
+};
+var combine = function() {
+  var guards = [];
+  for (var _i = 0; _i < arguments.length; _i++) {
+    guards[_i] = arguments[_i];
+  }
+  return function(v) {
+    var e_1, _a;
+    try {
+      for (var guards_1 = __values(guards), guards_1_1 = guards_1.next(); !guards_1_1.done; guards_1_1 = guards_1.next()) {
+        var guard = guards_1_1.value;
+        if (!guard(v)) {
+          return false;
+        }
+      }
+    } catch (e_1_1) {
+      e_1 = { error: e_1_1 };
+    } finally {
+      try {
+        if (guards_1_1 && !guards_1_1.done && (_a = guards_1.return)) _a.call(guards_1);
+      } finally {
+        if (e_1) throw e_1.error;
+      }
+    }
+    return true;
+  };
+};
+
+// dist/primitives.js
+var __read = function(o, n) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator];
+  if (!m) return o;
+  var i = m.call(o), r, ar = [], e;
+  try {
+    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+  } catch (error) {
+    e = { error };
+  } finally {
+    try {
+      if (r && !r.done && (m = i["return"])) m.call(i);
+    } finally {
+      if (e) throw e.error;
+    }
+  }
+  return ar;
+};
+var __spreadArray = function(to, from, pack) {
+  if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+    if (ar || !(i in from)) {
+      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+      ar[i] = from[i];
+    }
+  }
+  return to.concat(ar || Array.prototype.slice.call(from));
+};
+var MINIMUM_ARRAY_INDEX = 0;
+var isNumber = function(n) {
+  return typeof n === "number" && !isNaN(n);
+};
+var isFiniteNumber = function(n) {
+  return typeof n === "number" && !isNaN(n) && isFinite(n);
+};
+var isFloat = function(n) {
+  return typeof n === "number";
+};
+var isDouble = isFloat;
+var isInfinity = function(n) {
+  return typeof n === "number" && !isNaN(n) && !isFinite(n);
+};
+var _isNaN = function(n) {
+  return typeof n === "number" && isNaN(n);
+};
+var isElementOf = function() {
+  var ss = [];
+  for (var _i = 0; _i < arguments.length; _i++) {
+    ss[_i] = arguments[_i];
+  }
+  return function(s) {
+    return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
+  };
+};
+var isSingletonNumber = function(v) {
+  return function(n) {
+    return n === v;
+  };
+};
+var isSingletonNumberUnion = function() {
+  var ss = [];
+  for (var _i = 0; _i < arguments.length; _i++) {
+    ss[_i] = arguments[_i];
+  }
+  return function(s) {
+    return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
+  };
+};
+var isString = function(s) {
+  return typeof s === "string";
+};
+var isSingletonString = function(v) {
+  return function(s) {
+    return s === v;
+  };
+};
+var isSingletonStringUnion = function() {
+  var ss = [];
+  for (var _i = 0; _i < arguments.length; _i++) {
+    ss[_i] = arguments[_i];
+  }
+  return function(s) {
+    return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
+  };
+};
+var isBoolean = function(b) {
+  return typeof b === "boolean";
+};
+var isNull = function(o) {
+  return o === null;
+};
+var isUndefined = function(u) {
+  return typeof u === "undefined";
+};
+var isOptional = function(tgt) {
+  return function(o) {
+    return typeof o === "undefined" || tgt(o);
+  };
+};
+var isNullable = function(tgt) {
+  return function(o) {
+    return o === null || tgt(o);
+  };
+};
+var isMissing = function(tgt) {
+  return function(o) {
+    return o == null || tgt(o);
+  };
+};
+var isArray = function(valueCheck) {
+  return function(arr) {
+    return Array.isArray(arr) && arr.reduce(function(acc, v) {
+      return acc && valueCheck(v);
+    }, true);
+  };
+};
+var narrowValue = function(ptt, ptu) {
+  return combine(ptt, ptu);
+};
+var narrowArray = function(pt) {
+  return function(ts) {
+    return ts.reduce(function(acc, b) {
+      return acc && pt(b);
+    }, true);
+  };
+};
+var isSetOf = function(tg) {
+  return function(o) {
+    return o instanceof Set && Array.of.apply(Array, __spreadArray([], __read(o.values()), false)).reduce(function(acc, v) {
+      return acc && tg(v);
+    }, true);
+  };
+};
+var isObjectLike = function(obj) {
+  return obj != null && typeof obj === "object";
+};
+var isObject = function(obj) {
+  return obj != null && typeof obj === "object" && !(obj instanceof Array);
+};
+var isSet = function(obj) {
+  return obj != null;
+};
+var isNumericalEnumeration = function(e, flags) {
+  if (flags === void 0) {
+    flags = false;
+  }
+  var options = Object.values(e).filter(isNumber);
+  if (!flags) {
+    return function(obj) {
+      return options.includes(obj);
+    };
+  } else {
+    return function(obj) {
+      return typeof obj === "number" && obj !== 0 && options.filter(function(v) {
+        return (v & obj) === v;
+      }).reduce(function(acc, v) {
+        return acc | v;
+      }, 0) === obj;
+    };
+  }
+};
+var isStringEnumeration = function(e) {
+  var options = Object.values(e);
+  return function(obj) {
+    return options.includes(obj);
+  };
+};
+var isAny = function(_a) {
+  return true;
+};
+var isUnknown = isAny;
+var isNever = function(n) {
+  throw Error("Unexpected value when expecting never: ".concat(n));
+};
+
+// dist/objects.js
+var hasProperty = function(property, value) {
+  return function(o) {
+    return value(o[property]);
+  };
+};
+var hasOptionalProperty = function(property, value) {
+  return function(o) {
+    return !(property in o) || value(o[property]);
+  };
+};
+var isRecord = function(property, value) {
+  return function(o) {
+    return isObject(o) && hasProperty(property, value)(o);
+  };
+};
+var hasStringIndexSignature = function(value, enforce) {
+  if (enforce === void 0) {
+    enforce = true;
+  }
+  return function(o) {
+    var n = 0;
+    for (var prop in o) {
+      if (isNaN(parseInt(prop, 10))) {
+        if (value(o[prop])) {
+          n++;
+        } else {
+          return false;
+        }
+      }
+    }
+    return !enforce || n > 0;
+  };
+};
+var hasNumericIndexSignature = function(value, enforce) {
+  if (enforce === void 0) {
+    enforce = true;
+  }
+  return function(o) {
+    var n = 0;
+    for (var prop in o) {
+      if (!isNaN(parseInt(prop, 10))) {
+        if (value(o[prop])) {
+          n++;
+        } else {
+          return false;
+        }
+      }
+    }
+    return !enforce || n > 0;
+  };
+};
+var isInstance = function(klass) {
+  return function(o) {
+    return o instanceof klass;
+  };
+};
+var hasProperties = function(props) {
+  return function(o) {
+    for (var prop in props) {
+      if (!hasProperty(prop, props[prop])(o)) {
+        return false;
+      }
+    }
+    return true;
+  };
+};
+var hasOnlyProperties = function(props) {
+  return function(o) {
+    var found = [];
+    for (var prop in o) {
+      if (prop in props) {
+        var propsKey = prop;
+        if (!hasProperty(propsKey, props[propsKey])(o)) {
+          return false;
+        }
+        found.push(propsKey);
+      } else {
+        return false;
+      }
+    }
+    return found.length === Object.keys(props).length;
+  };
+};
+var hasOptionalProperties = function(props) {
+  return function(o) {
+    for (var prop in props) {
+      if (!hasOptionalProperty(prop, props[prop])(o)) {
+        return false;
+      }
+    }
+    return true;
+  };
+};
+var isLikeObject = function(props) {
+  return combine(isObject, hasProperties(props));
+};
+var isExactObject = function(props) {
+  return combine(isObject, hasOnlyProperties(props));
+};
+
+// dist/combinators/functions.js
+var isUnion = function(ptt, ptu) {
+  return function(o) {
+    return ptt(o) || ptu(o);
+  };
+};
+var isIntersection = function(ptt, ptu) {
+  return function(o) {
+    return ptt(o) && ptu(o);
+  };
+};
+
+// dist/combinators/unionof.js
+var UnionOf = (
+  /** @class */
+  function() {
+    function UnionOf2(ptt) {
+      this.ptt = ptt;
+    }
+    UnionOf2.prototype.get = function() {
+      return this.ptt;
+    };
+    UnionOf2.prototype.with = function(ptv) {
+      return new UnionOf2(isUnion(this.ptt, ptv));
+    };
+    return UnionOf2;
+  }()
+);
+
+// dist/combinators/intersectionof.js
+var IntersectionOf = (
+  /** @class */
+  function() {
+    function IntersectionOf2(ptt) {
+      this.ptt = ptt;
+    }
+    IntersectionOf2.prototype.get = function() {
+      return this.ptt;
+    };
+    IntersectionOf2.prototype.with = function(ptu) {
+      return new IntersectionOf2(isIntersection(this.ptt, ptu));
+    };
+    return IntersectionOf2;
+  }()
+);
+
+// dist/combinators/interface.js
+var InterfaceStep = (
+  /** @class */
+  function() {
+    function InterfaceStep2(ptt) {
+      this.ptt = ptt;
+    }
+    InterfaceStep2.prototype.get = function() {
+      var _this = this;
+      return function(obj) {
+        return isObjectLike(obj) && _this.ptt(obj);
+      };
+    };
+    InterfaceStep2.prototype.with = function(ptv) {
+      return new InterfaceStep2(isIntersection(this.ptt, ptv));
+    };
+    InterfaceStep2.prototype.withProperty = function(key, ptv) {
+      return new InterfaceStep2(isIntersection(this.ptt, hasProperty(key, ptv)));
+    };
+    InterfaceStep2.prototype.withOptionalProperty = function(key, ptv) {
+      return new InterfaceStep2(isIntersection(this.ptt, hasOptionalProperty(key, ptv)));
+    };
+    InterfaceStep2.prototype.withStringIndexSignature = function(value, enforce) {
+      if (enforce === void 0) {
+        enforce = true;
+      }
+      return new InterfaceStep2(isIntersection(this.ptt, hasStringIndexSignature(value, enforce)));
+    };
+    InterfaceStep2.prototype.withNumericIndexSignature = function(value, enforce) {
+      if (enforce === void 0) {
+        enforce = true;
+      }
+      return new InterfaceStep2(isIntersection(this.ptt, hasNumericIndexSignature(value, enforce)));
+    };
+    InterfaceStep2.prototype.withProperties = function(props) {
+      return new InterfaceStep2(isIntersection(this.ptt, hasProperties(props)));
+    };
+    InterfaceStep2.prototype.withOptionalProperties = function(props) {
+      return new InterfaceStep2(isIntersection(this.ptt, hasOptionalProperties(props)));
+    };
+    return InterfaceStep2;
+  }()
+);
+var IsInterface = (
+  /** @class */
+  function() {
+    function IsInterface2() {
+    }
+    IsInterface2.prototype.get = function() {
+      return isObjectLike;
+    };
+    IsInterface2.prototype.with = function(ptv) {
+      return new InterfaceStep(ptv);
+    };
+    IsInterface2.prototype.withProperty = function(key, ptv) {
+      return new InterfaceStep(hasProperty(key, ptv));
+    };
+    IsInterface2.prototype.withOptionalProperty = function(key, ptv) {
+      return new InterfaceStep(hasOptionalProperty(key, ptv));
+    };
+    IsInterface2.prototype.withStringIndexSignature = function(value, enforce) {
+      if (enforce === void 0) {
+        enforce = true;
+      }
+      return new InterfaceStep(hasStringIndexSignature(value, enforce));
+    };
+    IsInterface2.prototype.withNumericIndexSignature = function(value, enforce) {
+      if (enforce === void 0) {
+        enforce = true;
+      }
+      return new InterfaceStep(hasNumericIndexSignature(value, enforce));
+    };
+    IsInterface2.prototype.withProperties = function(props) {
+      return new InterfaceStep(hasProperties(props));
+    };
+    IsInterface2.prototype.withOptionalProperties = function(props) {
+      return new InterfaceStep(hasOptionalProperties(props));
+    };
+    return IsInterface2;
+  }()
+);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+//# sourceMappingURL=generic-type-guard.cjs.map
+
 
 /***/ })
 
