@@ -26,7 +26,7 @@
 	"scripts": {
 		"bundle": "npm run package",
 		"ci-test": "jest",
-		"lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+		"lint": "eslint",
 		"package": "ncc build src/index.ts --license licenses.txt",
 		"package:watch": "npm run package -- --watch",
 		"test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",

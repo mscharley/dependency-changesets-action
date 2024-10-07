@@ -25,7 +25,7 @@ index 0c63967..4733d7e 100644
 const partial = <T>(x: DeepPartial<T>): T => x as T;
 const getFiles
 	= (files: Record<string, unknown>) =>
-	<T>() =>
+		<T>() =>
 		// eslint-disable-next-line @typescript-eslint/require-await
 			async (path: string): Promise<[string, T]> => {
 				if (path in files) {

@@ -19,7 +19,7 @@ export const getPrPatch = async (
 	if (typeof patchResponse.data !== 'string') {
 		debug(typeof patchResponse.data);
 		debugJson('data', patchResponse.data);
-		throw new Error("Patch from Github isn't a string");
+		throw new Error('Patch from Github isn\'t a string');
 	}
 
 	return patchResponse.data as unknown as string;
