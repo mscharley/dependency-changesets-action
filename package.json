@@ -26,7 +26,7 @@
 	"scripts": {
 		"bundle": "npm run package",
 		"ci-test": "jest",
-		"lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
+		"lint": "eslint",
 		"package": "ncc build src/index.ts --license licenses.txt",
 		"package:watch": "npm run package -- --watch",
 		"test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
@@ -68,7 +68,7 @@
 		"generic-type-guard": "^5.0.0"
 	},
 	"devDependencies": {
-		"@mscharley/eslint-config": "3.1.5",
+		"@mscharley/eslint-config": "4.0.3",
 		"@mscharley/prettier-config": "3.0.6",
 		"@types/jest": "29.5.13",
 		"@types/node": "20.16.10",

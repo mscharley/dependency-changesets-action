@@ -15,7 +15,7 @@ export const getEvent = async (): Promise<PullRequestEvent> => {
 	const event: unknown = JSON.parse((await readFile(process.env.GITHUB_EVENT_PATH)).toString('utf-8'));
 
 	if (!(typeof event === 'object' && event != null && 'pull_request' in event)) {
-		throw new Error("Event doesn't have a pull_request available.");
+		throw new Error('Event doesn\'t have a pull_request available.');
 	}
 
 	return event as PullRequestEvent;
