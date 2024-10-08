@@ -24,13 +24,14 @@
 		"node": ">=20"
 	},
 	"scripts": {
-		"bundle": "npm run package",
+		"codegen": "graphql-code-generator",
+		"bundle": "npm run codegen && npm run package",
 		"ci-test": "jest",
 		"lint": "eslint",
 		"package": "ncc build src/index.ts --license licenses.txt",
 		"package:watch": "npm run package -- --watch",
 		"test": "(jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
-		"all": "npm run lint && npm run test && npm run package"
+		"all": "npm run codegen && npm run lint && npm run test && npm run package"
 	},
 	"license": "MIT",
 	"jest": {
@@ -59,7 +60,8 @@
 		],
 		"collectCoverage": true,
 		"collectCoverageFrom": [
-			"./src/**"
+			"./src/**",
+			"!./src/generated/**"
 		]
 	},
 	"dependencies": {
@@ -68,6 +70,8 @@
 		"generic-type-guard": "^5.0.0"
 	},
 	"devDependencies": {
+		"@graphql-codegen/cli": "5.0.2",
+		"@graphql-codegen/typescript": "4.0.9",
 		"@mscharley/eslint-config": "4.0.3",
 		"@mscharley/prettier-config": "3.0.6",
 		"@types/jest": "29.5.13",
