@@ -71,6 +71,7 @@
 	},
 	"devDependencies": {
 		"@graphql-codegen/cli": "5.0.2",
+		"@graphql-codegen/typescript": "4.0.9",
 		"@mscharley/eslint-config": "4.0.3",
 		"@mscharley/prettier-config": "3.0.6",
 		"@types/jest": "29.5.13",
@@ -80,8 +81,7 @@
 		"js-yaml": "4.1.0",
 		"make-coverage-badge": "1.2.0",
 		"ts-jest": "29.2.5",
-		"typescript": "5.6.2",
-		"@graphql-codegen/typescript": "4.0.9"
+		"typescript": "5.6.2"
 	},
 	"packageManager": "npm@10.9.0+sha512.65a9c38a8172948f617a53619762cd77e12b9950fe1f9239debcb8d62c652f2081824b986fee7c0af6c0a7df615becebe4bf56e17ec27214a87aa29d9e038b4b"
 }
