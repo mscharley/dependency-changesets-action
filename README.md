@@ -36,9 +36,19 @@ This action will watch for pull requests from these services and add a changeset
     # This can be useful for some services, for example Renovate has a configuration to ignore certain authors so that
     # the pushes made by this action don't invalidate the check it does that no extra commits have been added to the PR.
     #
+    # This conflicts with signed commits.
+    #
     # Default: no custom author
     author-name: ''
     author-email: ''
+
+    # Generate signed commits.
+    #
+    # This conflicts with custom author information. The API that allows Github to sign commits automatically doesn't
+    # allow for custom author information and will use your default email address.
+    #
+    # Default: false
+    sign-commits: false
 ```
 
 ### Full workflow example

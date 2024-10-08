@@ -714,6 +714,8 @@ export type AnnouncementBanner = {
 /** A GitHub App. */
 export type App = Node & {
   __typename?: 'App';
+  /** The client ID of the app. */
+  clientId?: Maybe<Scalars['String']['output']>;
   /** Identifies the date and time when the object was created. */
   createdAt: Scalars['DateTime']['output'];
   /** Identifies the primary key from the database. */
@@ -6697,6 +6699,7 @@ export type EnterpriseMembersArgs = {
   organizationLogins?: InputMaybe<Array<Scalars['String']['input']>>;
   query?: InputMaybe<Scalars['String']['input']>;
   role?: InputMaybe<EnterpriseUserAccountMembershipRole>;
+  twoFactorMethodSecurity?: InputMaybe<TwoFactorCredentialSecurityType>;
 };
 
 
@@ -6874,6 +6877,14 @@ export enum EnterpriseDefaultRepositoryPermissionSettingValue {
   Read = 'READ',
   /** Organization members will be able to clone, pull, and push all organization repositories. */
   Write = 'WRITE'
+}
+
+/** The possible values for an enabled/no policy enterprise setting. */
+export enum EnterpriseDisallowedMethodsSettingValue {
+  /** The setting prevents insecure 2FA methods from being used by members of the enterprise. */
+  Insecure = 'INSECURE',
+  /** There is no policy set for preventing insecure 2FA methods from being used by members of the enterprise. */
+  NoPolicy = 'NO_POLICY'
 }
 
 /** An edge in a connection. */
@@ -7286,6 +7297,8 @@ export type EnterpriseOwnerInfo = {
   teamDiscussionsSetting: EnterpriseEnabledDisabledSettingValue;
   /** A list of enterprise organizations configured with the provided team discussions setting value. */
   teamDiscussionsSettingOrganizations: OrganizationConnection;
+  /** The setting value for what methods of two-factor authentication the enterprise prevents its users from having. */
+  twoFactorDisallowedMethodsSetting: EnterpriseDisallowedMethodsSettingValue;
   /** The setting value for whether the enterprise requires two-factor authentication for its organizations and users. */
   twoFactorRequiredSetting: EnterpriseEnabledSettingValue;
   /** A list of enterprise organizations configured with the two-factor authentication setting value. */
@@ -7307,6 +7320,7 @@ export type EnterpriseOwnerInfoAdminsArgs = {
   organizationLogins?: InputMaybe<Array<Scalars['String']['input']>>;
   query?: InputMaybe<Scalars['String']['input']>;
   role?: InputMaybe<EnterpriseAdministratorRole>;
+  twoFactorMethodSecurity?: InputMaybe<TwoFactorCredentialSecurityType>;
 };
 
 
@@ -7531,6 +7545,7 @@ export type EnterpriseOwnerInfoOutsideCollaboratorsArgs = {
   orderBy?: InputMaybe<EnterpriseMemberOrder>;
   organizationLogins?: InputMaybe<Array<Scalars['String']['input']>>;
   query?: InputMaybe<Scalars['String']['input']>;
+  twoFactorMethodSecurity?: InputMaybe<TwoFactorCredentialSecurityType>;
   visibility?: InputMaybe<RepositoryVisibility>;
 };
 
@@ -8401,39 +8416,27 @@ export type FileDeletion = {
   path: Scalars['String']['input'];
 };
 
-/**
- * Prevent commits that include files with specified file extensions from being
- * pushed to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include files with specified file extensions from being pushed to the commit graph. */
 export type FileExtensionRestrictionParameters = {
   __typename?: 'FileExtensionRestrictionParameters';
   /** The file extensions that are restricted from being pushed to the commit graph. */
   restrictedFileExtensions: Array<Scalars['String']['output']>;
 };
 
-/**
- * Prevent commits that include files with specified file extensions from being
- * pushed to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include files with specified file extensions from being pushed to the commit graph. */
 export type FileExtensionRestrictionParametersInput = {
   /** The file extensions that are restricted from being pushed to the commit graph. */
   restrictedFileExtensions: Array<Scalars['String']['input']>;
 };
 
-/**
- * Prevent commits that include changes in specified file paths from being pushed
- * to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include changes in specified file paths from being pushed to the commit graph. */
 export type FilePathRestrictionParameters = {
   __typename?: 'FilePathRestrictionParameters';
   /** The file paths that are restricted from being pushed to the commit graph. */
   restrictedFilePaths: Array<Scalars['String']['output']>;
 };
 
-/**
- * Prevent commits that include changes in specified file paths from being pushed
- * to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include changes in specified file paths from being pushed to the commit graph. */
 export type FilePathRestrictionParametersInput = {
   /** The file paths that are restricted from being pushed to the commit graph. */
   restrictedFilePaths: Array<Scalars['String']['input']>;
@@ -10691,39 +10694,27 @@ export type MarketplaceListingEdge = {
   node?: Maybe<MarketplaceListing>;
 };
 
-/**
- * Prevent commits that include file paths that exceed a specified character limit
- * from being pushed to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include file paths that exceed a specified character limit from being pushed to the commit graph. */
 export type MaxFilePathLengthParameters = {
   __typename?: 'MaxFilePathLengthParameters';
   /** The maximum amount of characters allowed in file paths */
   maxFilePathLength: Scalars['Int']['output'];
 };
 
-/**
- * Prevent commits that include file paths that exceed a specified character limit
- * from being pushed to the commit graph. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that include file paths that exceed a specified character limit from being pushed to the commit graph. */
 export type MaxFilePathLengthParametersInput = {
   /** The maximum amount of characters allowed in file paths */
   maxFilePathLength: Scalars['Int']['input'];
 };
 
-/**
- * Prevent commits that exceed a specified file size limit from being pushed to the
- * commit. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that exceed a specified file size limit from being pushed to the commit. */
 export type MaxFileSizeParameters = {
   __typename?: 'MaxFileSizeParameters';
   /** The maximum file size allowed in megabytes. This limit does not apply to Git Large File Storage (Git LFS). */
   maxFileSize: Scalars['Int']['output'];
 };
 
-/**
- * Prevent commits that exceed a specified file size limit from being pushed to the
- * commit. NOTE: This rule is in beta and subject to change
- */
+/** Prevent commits that exceed a specified file size limit from being pushed to the commit. */
 export type MaxFileSizeParametersInput = {
   /** The maximum file size allowed in megabytes. This limit does not apply to Git Large File Storage (Git LFS). */
   maxFileSize: Scalars['Int']['input'];
@@ -12018,6 +12009,8 @@ export type Mutation = {
   updateEnterpriseRepositoryProjectsSetting?: Maybe<UpdateEnterpriseRepositoryProjectsSettingPayload>;
   /** Sets whether team discussions are enabled for an enterprise. */
   updateEnterpriseTeamDiscussionsSetting?: Maybe<UpdateEnterpriseTeamDiscussionsSettingPayload>;
+  /** Sets the two-factor authentication methods that users of an enterprise may not use. */
+  updateEnterpriseTwoFactorAuthenticationDisallowedMethodsSetting?: Maybe<UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingPayload>;
   /** Sets whether two factor authentication is required for all users in an enterprise. */
   updateEnterpriseTwoFactorAuthenticationRequiredSetting?: Maybe<UpdateEnterpriseTwoFactorAuthenticationRequiredSettingPayload>;
   /** Updates an environment. */
@@ -13337,6 +13330,12 @@ export type MutationUpdateEnterpriseRepositoryProjectsSettingArgs = {
 /** The root query for implementing GraphQL mutations. */
 export type MutationUpdateEnterpriseTeamDiscussionsSettingArgs = {
   input: UpdateEnterpriseTeamDiscussionsSettingInput;
+};
+
+
+/** The root query for implementing GraphQL mutations. */
+export type MutationUpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingArgs = {
+  input: UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingInput;
 };
 
 
@@ -15650,6 +15649,7 @@ export type OrganizationRepositoryMigrationsArgs = {
 /** An account on GitHub, with one or more owners, that has repositories, members and teams. */
 export type OrganizationRulesetArgs = {
   databaseId: Scalars['Int']['input'];
+  includeParents?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -17286,12 +17286,17 @@ export type ProjectV2 = Closable & Node & Updatable & {
   createdAt: Scalars['DateTime']['output'];
   /** The actor who originally created the project. */
   creator?: Maybe<Actor>;
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2025-04-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
   /** A field of the project */
   field?: Maybe<ProjectV2FieldConfiguration>;
   /** List of fields and their constraints in the project */
   fields: ProjectV2FieldConfigurationConnection;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the ProjectV2 object */
   id: Scalars['ID']['output'];
   /** List of items in the project */
@@ -17658,7 +17663,10 @@ export type ProjectV2Item = Node & {
   createdAt: Scalars['DateTime']['output'];
   /** The actor who created the item. */
   creator?: Maybe<Actor>;
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2025-04-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
   /** The field value of the first project field which matches the 'name' argument that is set on the item. */
   fieldValueByName?: Maybe<ProjectV2ItemFieldValue>;
@@ -18313,8 +18321,13 @@ export type ProjectV2StatusUpdate = Node & {
   createdAt: Scalars['DateTime']['output'];
   /** The actor who created the status update. */
   creator?: Maybe<Actor>;
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2025-04-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the ProjectV2StatusUpdate object */
   id: Scalars['ID']['output'];
   /** The project that contains this status update. */
@@ -18376,12 +18389,17 @@ export type ProjectV2View = Node & {
   __typename?: 'ProjectV2View';
   /** Identifies the date and time when the object was created. */
   createdAt: Scalars['DateTime']['output'];
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2025-04-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
   /** The view's visible fields. */
   fields?: Maybe<ProjectV2FieldConfigurationConnection>;
   /** The project view's filter. */
   filter?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /**
    * The view's group-by field.
    * @deprecated The `ProjectV2View#order_by` API is deprecated in favour of the more capable `ProjectV2View#group_by_field` API. Check out the `ProjectV2View#group_by_fields` API as an example for the more capable alternative. Removal on 2023-04-01 UTC.
@@ -18555,10 +18573,15 @@ export type ProjectV2Workflow = Node & {
   __typename?: 'ProjectV2Workflow';
   /** Identifies the date and time when the object was created. */
   createdAt: Scalars['DateTime']['output'];
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2025-04-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
   /** Whether the workflow is enabled. */
   enabled: Scalars['Boolean']['output'];
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the ProjectV2Workflow object */
   id: Scalars['ID']['output'];
   /** The name of the workflow. */
@@ -20112,7 +20135,7 @@ export type PushAllowanceEdge = {
 };
 
 /** The query root of GitHub's GraphQL interface. */
-export type Query = {
+export type Query = Node & {
   __typename?: 'Query';
   /** Look up a code of conduct by its key */
   codeOfConduct?: Maybe<CodeOfConduct>;
@@ -20128,6 +20151,8 @@ export type Query = {
   enterpriseMemberInvitation?: Maybe<EnterpriseMemberInvitation>;
   /** Look up a pending enterprise unaffiliated member invitation by invitation token. */
   enterpriseMemberInvitationByToken?: Maybe<EnterpriseMemberInvitation>;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
   /** Look up an open source license by its key */
   license?: Maybe<License>;
   /** Return a list of known open source licenses */
@@ -23874,28 +23899,15 @@ export enum RepositoryRuleType {
   Creation = 'CREATION',
   /** Only allow users with bypass permissions to delete matching refs. */
   Deletion = 'DELETION',
-  /**
-   * Prevent commits that include files with specified file extensions from being
-   * pushed to the commit graph. NOTE: This rule is in beta and subject to change
-   */
+  /** Prevent commits that include files with specified file extensions from being pushed to the commit graph. */
   FileExtensionRestriction = 'FILE_EXTENSION_RESTRICTION',
-  /**
-   * Prevent commits that include changes in specified file paths from being pushed
-   * to the commit graph. NOTE: This rule is in beta and subject to change
-   */
+  /** Prevent commits that include changes in specified file paths from being pushed to the commit graph. */
   FilePathRestriction = 'FILE_PATH_RESTRICTION',
   /** Branch is read-only. Users cannot push to the branch. */
   LockBranch = 'LOCK_BRANCH',
-  /**
-   * Prevent commits that include file paths that exceed a specified character
-   * limit from being pushed to the commit graph. NOTE: This rule is in beta and
-   * subject to change
-   */
+  /** Prevent commits that include file paths that exceed a specified character limit from being pushed to the commit graph. */
   MaxFilePathLength = 'MAX_FILE_PATH_LENGTH',
-  /**
-   * Prevent commits that exceed a specified file size limit from being pushed to
-   * the commit. NOTE: This rule is in beta and subject to change
-   */
+  /** Prevent commits that exceed a specified file size limit from being pushed to the commit. */
   MaxFileSize = 'MAX_FILE_SIZE',
   /** Max ref updates */
   MaxRefUpdates = 'MAX_REF_UPDATES',
@@ -23997,6 +24009,8 @@ export type RepositoryRulesetBypassActor = Node & {
   bypassMode?: Maybe<RepositoryRulesetBypassActorBypassMode>;
   /** This actor represents the ability for a deploy key to bypass */
   deployKey: Scalars['Boolean']['output'];
+  /** This actor represents the ability for an enterprise owner to bypass */
+  enterpriseOwner: Scalars['Boolean']['output'];
   /** The Node ID of the RepositoryRulesetBypassActor object */
   id: Scalars['ID']['output'];
   /** This actor represents the ability for an organization owner to bypass */
@@ -24051,6 +24065,8 @@ export type RepositoryRulesetBypassActorInput = {
   bypassMode: RepositoryRulesetBypassActorBypassMode;
   /** For deploy key bypasses, true. Can only use ALWAYS as the bypass mode */
   deployKey?: InputMaybe<Scalars['Boolean']['input']>;
+  /** For enterprise owner bypasses, true */
+  enterpriseOwner?: InputMaybe<Scalars['Boolean']['input']>;
   /** For organization owner bypasses, true */
   organizationAdmin?: InputMaybe<Scalars['Boolean']['input']>;
   /** For role bypasses, the role database ID */
@@ -24079,7 +24095,7 @@ export type RepositoryRulesetEdge = {
   node?: Maybe<RepositoryRuleset>;
 };
 
-/** The targets supported for rulesets. NOTE: The push target is in beta and subject to change. */
+/** The targets supported for rulesets. */
 export enum RepositoryRulesetTarget {
   /** Branch */
   Branch = 'BRANCH',
@@ -24814,7 +24830,7 @@ export type RuleParametersInput = {
 };
 
 /** Types which can have `RepositoryRule` objects. */
-export type RuleSource = Organization | Repository;
+export type RuleSource = Enterprise | Organization | Repository;
 
 /** The possible digest algorithms used to sign SAML requests for an identity provider. */
 export enum SamlDigestAlgorithm {
@@ -24973,7 +24989,10 @@ export type SecurityAdvisory = Node & {
   __typename?: 'SecurityAdvisory';
   /** The classification of the advisory */
   classification: SecurityAdvisoryClassification;
-  /** The CVSS associated with this advisory */
+  /**
+   * The CVSS associated with this advisory
+   * @deprecated `cvss` will be removed. New `cvss_severities` field will now contain both `cvss_v3` and `cvss_v4` properties. Removal on 2025-10-01 UTC.
+   */
   cvss: Cvss;
   /** CWEs associated with this Advisory */
   cwes: CweConnection;
@@ -25125,6 +25144,10 @@ export type SecurityAdvisoryOrder = {
 
 /** Properties by which security advisory connections can be ordered. */
 export enum SecurityAdvisoryOrderField {
+  /** Order advisories by EPSS percentage */
+  EpssPercentage = 'EPSS_PERCENTAGE',
+  /** Order advisories by EPSS percentile */
+  EpssPercentile = 'EPSS_PERCENTILE',
   /** Order advisories by publication time */
   PublishedAt = 'PUBLISHED_AT',
   /** Order advisories by update time */
@@ -28494,6 +28517,16 @@ export type TreeEntry = {
   type: Scalars['String']['output'];
 };
 
+/** Filters by whether or not 2FA is enabled and if the method configured is considered secure or insecure. */
+export enum TwoFactorCredentialSecurityType {
+  /** No method of two-factor authentication. */
+  Disabled = 'DISABLED',
+  /** Has an insecure method of two-factor authentication. GitHub currently defines this as SMS two-factor authentication. */
+  Insecure = 'INSECURE',
+  /** Has only secure methods of two-factor authentication. */
+  Secure = 'SECURE'
+}
+
 /** Autogenerated input type of UnarchiveProjectV2Item */
 export type UnarchiveProjectV2ItemInput = {
   /** A unique identifier for the client performing the mutation. */
@@ -29439,6 +29472,27 @@ export type UpdateEnterpriseTeamDiscussionsSettingPayload = {
   /** The enterprise with the updated team discussions setting. */
   enterprise?: Maybe<Enterprise>;
   /** A message confirming the result of updating the team discussions setting. */
+  message?: Maybe<Scalars['String']['output']>;
+};
+
+/** Autogenerated input type of UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSetting */
+export type UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the enterprise on which to set the two-factor authentication disallowed methods setting. */
+  enterpriseId: Scalars['ID']['input'];
+  /** The value for the two-factor authentication disallowed methods setting on the enterprise. */
+  settingValue: EnterpriseDisallowedMethodsSettingValue;
+};
+
+/** Autogenerated return type of UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSetting. */
+export type UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingPayload = {
+  __typename?: 'UpdateEnterpriseTwoFactorAuthenticationDisallowedMethodsSettingPayload';
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: Maybe<Scalars['String']['output']>;
+  /** The enterprise with the updated two-factor authentication disallowed methods setting. */
+  enterprise?: Maybe<Enterprise>;
+  /** A message confirming the result of updating the two-factor authentication disallowed methods setting. */
   message?: Maybe<Scalars['String']['output']>;
 };
 
