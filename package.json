@@ -73,7 +73,7 @@
 		"@graphql-codegen/cli": "5.0.2",
 		"@graphql-codegen/typescript": "4.0.9",
 		"@graphql-typed-document-node/core": "3.2.0",
-		"@mscharley/eslint-config": "4.0.3",
+		"@mscharley/eslint-config": "4.0.4",
 		"@mscharley/prettier-config": "3.0.7",
 		"@types/jest": "29.5.13",
 		"@types/node": "20.16.11",
