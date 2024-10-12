@@ -30667,6 +30667,8 @@ var IssueClosedStateReason;
 (function (IssueClosedStateReason) {
     /** An issue that has been closed as completed */
     IssueClosedStateReason["Completed"] = "COMPLETED";
+    /** An issue that has been closed as a duplicate */
+    IssueClosedStateReason["Duplicate"] = "DUPLICATE";
     /** An issue that has been closed as not planned */
     IssueClosedStateReason["NotPlanned"] = "NOT_PLANNED";
 })(IssueClosedStateReason || (exports.IssueClosedStateReason = IssueClosedStateReason = {}));
@@ -30699,6 +30701,8 @@ var IssueStateReason;
 (function (IssueStateReason) {
     /** An issue that has been closed as completed */
     IssueStateReason["Completed"] = "COMPLETED";
+    /** An issue that has been closed as a duplicate */
+    IssueStateReason["Duplicate"] = "DUPLICATE";
     /** An issue that has been closed as not planned */
     IssueStateReason["NotPlanned"] = "NOT_PLANNED";
     /** An issue that has been reopened */
