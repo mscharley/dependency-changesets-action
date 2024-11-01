@@ -1,11 +1,11 @@
-import type { Commit, PullRequest } from './model/Github';
-import type { ActionInput } from './io/parseInput';
-import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration';
+import type { Commit, PullRequest } from './model/Github.js';
+import type { ActionInput } from './io/parseInput.js';
+import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
 import { debug } from '@actions/core';
-import { debugJson } from './io/debugJson';
-import type { NpmPackage } from './model/NpmPackage';
-import { parseConventionalCommitMessage } from './parseConventionalCommitMessage';
-import type { PatchResults } from './io/github/parsePatch';
+import { debugJson } from './io/debugJson.js';
+import type { NpmPackage } from './model/NpmPackage.js';
+import { parseConventionalCommitMessage } from './parseConventionalCommitMessage.js';
+import type { PatchResults } from './io/github/parsePatch.js';
 
 export interface Changeset {
 	affectedPackages: string[];

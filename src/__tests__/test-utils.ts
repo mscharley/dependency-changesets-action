@@ -1,6 +1,6 @@
-import type { Commit, PullRequest } from '../model/Github';
-import type { ActionInput } from '../io/parseInput';
-import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration';
+import type { Commit, PullRequest } from '../model/Github.js';
+import type { ActionInput } from '../io/parseInput.js';
+import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
 
 export declare type DeepPartial<T> =
 	| T

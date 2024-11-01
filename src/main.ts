@@ -1,14 +1,14 @@
 import { debug, setOutput } from '@actions/core';
-import { CreateCommitDocument } from './generated/graphql';
-import type { CreateCommitMutationVariables } from './generated/graphql';
-import { debugJson } from './io/debugJson';
-import { getCommitLog } from './io/github/getCommitLog';
-import { getEvent } from './io/getEvent';
-import { getFile } from './io/github/getFile';
-import { getPrPatch } from './io/github/getPrPatch';
-import { isChangesetsConfiguration } from './model/ChangesetsConfiguration';
-import { parseInput } from './io/parseInput';
-import { processPullRequest } from './processPullRequest';
+import { CreateCommitDocument } from './generated/graphql.js';
+import type { CreateCommitMutationVariables } from './generated/graphql.js';
+import { debugJson } from './io/debugJson.js';
+import { getCommitLog } from './io/github/getCommitLog.js';
+import { getEvent } from './io/getEvent.js';
+import { getFile } from './io/github/getFile.js';
+import { getPrPatch } from './io/github/getPrPatch.js';
+import { isChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
+import { parseInput } from './io/parseInput.js';
+import { processPullRequest } from './processPullRequest.js';
 
 /**
  * The main function for the action.

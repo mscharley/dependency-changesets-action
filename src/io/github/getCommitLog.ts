@@ -1,4 +1,4 @@
-import type { Commit, PullRequest } from '../../model/Github';
+import type { Commit, PullRequest } from '../../model/Github.js';
 import type { getOctokit } from '@actions/github';
 
 export const getCommitLog = async (

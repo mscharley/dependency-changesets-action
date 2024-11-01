@@ -1,8 +1,8 @@
-import type { Commit, PullRequest } from '../model/Github';
-import type { ActionInput } from '../io/parseInput';
-import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration';
-import type { DeepPartial } from './test-utils';
-import { processPullRequest } from '../processPullRequest';
+import type { Commit, PullRequest } from '../model/Github.js';
+import type { ActionInput } from '../io/parseInput.js';
+import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
+import type { DeepPartial } from './test-utils.js';
+import { processPullRequest } from '../processPullRequest.js';
 
 const owner = 'mscharley';
 const repo = 'dependency-changesets-action';
