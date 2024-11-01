@@ -77,7 +77,7 @@
 		"@graphql-codegen/cli": "5.0.3",
 		"@graphql-codegen/typescript": "4.1.0",
 		"@graphql-typed-document-node/core": "3.2.0",
-		"@mscharley/eslint-config": "4.0.4",
+		"@mscharley/eslint-config": "4.0.7",
 		"@mscharley/prettier-config": "3.0.7",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-node-resolve": "^15.3.0",
