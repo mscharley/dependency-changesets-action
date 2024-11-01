@@ -1,4 +1,4 @@
-import type { PullRequest } from '../model/Github';
+import type { PullRequest } from '../model/Github.js';
 import { readFile } from 'node:fs/promises';
 
 // https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request

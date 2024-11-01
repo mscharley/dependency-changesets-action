@@ -1,12 +1,12 @@
-import type { Commit, PullRequest } from './model/Github';
-import type { ActionInput } from './io/parseInput';
-import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration';
+import type { Commit, PullRequest } from './model/Github.js';
+import type { ActionInput } from './io/parseInput.js';
+import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
 import { debug } from '@actions/core';
-import { debugJson } from './io/debugJson';
-import { generateChangeset } from './generateChangeset';
-import { isNpmPackage } from './model/NpmPackage';
+import { debugJson } from './io/debugJson.js';
+import { generateChangeset } from './generateChangeset.js';
+import { isNpmPackage } from './model/NpmPackage.js';
 import { join as joinPath } from 'node:path';
-import { parsePatch } from './io/github/parsePatch';
+import { parsePatch } from './io/github/parsePatch.js';
 import type { TypeGuard } from 'generic-type-guard';
 
 export const processPullRequest = async (

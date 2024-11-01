@@ -1,6 +1,6 @@
-import { changesets, commit, input, pr } from './test-utils';
-import type { Changeset } from '../generateChangeset';
-import { generateChangeset } from '../generateChangeset';
+import { changesets, commit, input, pr } from './test-utils.js';
+import type { Changeset } from '../generateChangeset.js';
+import { generateChangeset } from '../generateChangeset.js';
 
 describe('generateChangeset', () => {
 	describe('conventional commits', () => {

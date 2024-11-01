@@ -1,5 +1,5 @@
 import { getBooleanInput, getInput, warning } from '@actions/core';
-import { debugJson } from './debugJson';
+import { debugJson } from './debugJson.js';
 import { getOctokit } from '@actions/github';
 
 const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';

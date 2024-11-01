@@ -1,4 +1,4 @@
-import { parseConventionalCommitMessage } from '../parseConventionalCommitMessage';
+import { parseConventionalCommitMessage } from '../parseConventionalCommitMessage.js';
 
 describe('parseConventionalCommitMessage', () => {
 	describe('none', () => {
