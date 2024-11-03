@@ -1,6 +1,9 @@
 # Dependency directory
 node_modules
 
+# Delete unnecessary files
+/dist/*.js.map
+
 # GraphQL codegen files
 /src/generated
 

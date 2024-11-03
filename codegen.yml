@@ -7,3 +7,5 @@ generates:
     preset: 'client'
     config:
       documentMode: 'string'
+      enumsAsTypes: true
+      useTypeImports: true

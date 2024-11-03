@@ -1,4 +1,5 @@
 import type { Commit, PullRequest } from '../model/Github.js';
+import { describe, expect, it } from '@jest/globals';
 import type { ActionInput } from '../io/parseInput.js';
 import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
 import type { DeepPartial } from './test-utils.js';

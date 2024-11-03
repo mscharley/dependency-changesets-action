@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { parseConventionalCommitMessage } from '../parseConventionalCommitMessage.js';
 
 describe('parseConventionalCommitMessage', () => {

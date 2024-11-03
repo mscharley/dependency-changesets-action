@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { parsePatch } from '../parsePatch.js';
 
 describe('parsePatch', () => {
