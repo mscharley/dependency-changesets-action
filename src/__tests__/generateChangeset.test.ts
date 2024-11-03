@@ -1,5 +1,5 @@
 import { changesets, commit, input, pr } from './test-utils.js';
-import type { Changeset } from '../generateChangeset.js';
+import { describe, expect, it } from '@jest/globals';
 import { generateChangeset } from '../generateChangeset.js';
 
 describe('generateChangeset', () => {
@@ -14,7 +14,7 @@ describe('generateChangeset', () => {
 					{ foundChangeset: false },
 					[['package.json', { name: '@mscharley/test' }]],
 				),
-			).toMatchObject<Changeset>({
+			).toMatchObject({
 				affectedPackages: ['@mscharley/test'],
 				message: 'chore: hello, world',
 				updateType: 'patch',
@@ -74,7 +74,7 @@ describe('generateChangeset', () => {
 					['packages/test/package.json', { name: '@mscharley/test' }],
 				],
 			),
-		).toMatchObject<Changeset>({
+		).toMatchObject({
 			affectedPackages: ['@mscharley/test'],
 			message: 'fix: hello, world',
 			updateType: 'patch',
@@ -91,7 +91,7 @@ describe('generateChangeset', () => {
 				{ foundChangeset: false },
 				[['package.json', { name: '@mscharley/test' }], ['package.json', { name: '@mscharley/test2' }]],
 			),
-		).toMatchObject<Changeset>({
+		).toMatchObject({
 			affectedPackages: ['@mscharley/test2'],
 			message: 'fix: hello, world',
 			updateType: 'patch',

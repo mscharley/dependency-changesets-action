@@ -2,8 +2,8 @@
 	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
 		"target": "ES2022",
-		"module": "NodeNext",
 		"rootDir": "./src",
+		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"baseUrl": "./",
 		"sourceMap": true,
@@ -12,8 +12,11 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
+		"types": [],
 		"skipLibCheck": true,
-		"newLine": "lf"
+		"newLine": "lf",
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true
 	},
 	"exclude": ["./dist", "./node_modules", "./coverage"]
 }

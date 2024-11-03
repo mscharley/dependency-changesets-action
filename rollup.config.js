@@ -6,17 +6,19 @@ import typescript from '@rollup/plugin-typescript';
 export default {
 	input: 'src/index.ts',
 	output: {
-		file: 'dist/index.cjs',
-		format: 'cjs',
+		file: 'dist/index.js',
+		format: 'esm',
 		sourcemap: true,
 	},
-	treeshake: true,
+	treeshake: {
+		preset: 'recommended',
+	},
 	plugins: [
-		commonjs(),
 		nodeResolve({
 			exportConditions: ['node'],
 			preferBuiltins: true,
 		}),
+		commonjs(),
 		typescript(),
 		license({
 			thirdParty: {
