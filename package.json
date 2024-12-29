@@ -26,13 +26,13 @@
 	},
 	"scripts": {
 		"codegen": "graphql-code-generator",
-		"bundle": "npm run codegen && npm run package",
+		"bundle": "pnpm run codegen && pnpm run package",
 		"ci-test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
 		"lint": "tsc --noEmit && eslint",
 		"package": "rollup --config rollup.config.js",
-		"package:watch": "npm run package -- --watch",
+		"package:watch": "pnpm run package -- --watch",
 		"test": "(NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
-		"all": "npm run codegen && npm run lint && npm run test && npm run package"
+		"all": "pnpm run codegen && pnpm run lint && pnpm run test && pnpm run package"
 	},
 	"license": "MIT",
 	"dependencies": {
