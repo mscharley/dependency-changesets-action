@@ -31712,9 +31712,9 @@ async function run() {
         coreExports.setOutput('created-changeset', false);
         return;
     }
-    coreExports.debug('Pushing changeset to Github');
     const { content, outputPath } = changeset;
     if (input.signCommits) {
+        coreExports.debug('Pushing changeset to Github');
         if (input.author != null) {
             throw new Error('Custom author information is incompatible with signing commits.');
         }
@@ -31741,15 +31741,24 @@ async function run() {
         });
     }
     else {
-        await octokit.rest.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            branch: ref,
-            path: outputPath,
-            message: input.commitMessage,
-            content: Buffer.from(content, 'utf8').toString('base64'),
-            author: input.author,
-        });
+        debugJson('Pushing changeset to Github', { owner, repo, ref, outputPath });
+        try {
+            await octokit.rest.repos.createOrUpdateFileContents({
+                owner,
+                repo,
+                branch: ref,
+                path: outputPath,
+                message: input.commitMessage,
+                content: Buffer.from(content, 'utf8').toString('base64'),
+                author: input.author,
+            });
+        }
+        catch (e) {
+            if (e instanceof Error && e.message.includes(`"sha" wasn't supplied`)) {
+                throw new Error('Attempted to update a changeset instead of creating a new one - this is probably a bug.', { cause: e });
+            }
+            throw e;
+        }
     }
     // Set outputs for other workflow steps to use
     coreExports.setOutput('created-changeset', true);
