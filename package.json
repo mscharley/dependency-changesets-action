@@ -21,9 +21,6 @@
 	"exports": {
 		".": "./dist/index.js"
 	},
-	"engines": {
-		"node": ">=20"
-	},
 	"scripts": {
 		"codegen": "graphql-code-generator",
 		"bundle": "pnpm run codegen && pnpm run package",
