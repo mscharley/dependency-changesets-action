@@ -42,7 +42,7 @@
 		"@graphql-codegen/typescript": "4.1.5",
 		"@graphql-typed-document-node/core": "3.2.0",
 		"@jest/globals": "29.7.0",
-		"@mscharley/eslint-config": "4.2.1",
+		"@mscharley/eslint-config": "4.2.2",
 		"@mscharley/prettier-config": "3.1.1",
 		"@rollup/plugin-commonjs": "28.0.2",
 		"@rollup/plugin-node-resolve": "16.0.0",
