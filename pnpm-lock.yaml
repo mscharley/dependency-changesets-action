@@ -15,8 +15,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       generic-type-guard:
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: ^5.0.3
+        version: 5.0.3
     devDependencies:
       '@graphql-codegen/cli':
         specifier: 5.0.5
@@ -2132,8 +2132,8 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  generic-type-guard@5.0.2:
-    resolution: {integrity: sha512-jPBWCwQC51/zLHo+z9CHaZq4isI0FcLq7rmqFhmcn4hrmwJ+uMBDRyEFYLyyjtBzZrZEUxyyRU8DtmYfmos+9g==}
+  generic-type-guard@5.0.3:
+    resolution: {integrity: sha512-CBaZ6DgG1VIJPjcY44KBqQ/r6C4psM4sI0GFyNQDY+oO9cYzRxpFwT6ATDdChMObg6JZtgzmyqE1CJg7O3tIdw==}
     engines: {node: '>= 18'}
 
   gensync@1.0.0-beta.2:
@@ -6598,7 +6598,7 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  generic-type-guard@5.0.2: {}
+  generic-type-guard@5.0.3: {}
 
   gensync@1.0.0-beta.2: {}
 
