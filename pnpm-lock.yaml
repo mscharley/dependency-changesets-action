@@ -46,8 +46,8 @@ importers:
         specifier: 12.1.2
         version: 12.1.2(rollup@4.40.0)(tslib@2.7.0)(typescript@5.8.3)
       '@swc/jest':
-        specifier: 0.2.37
-        version: 0.2.37(@swc/core@1.7.42)
+        specifier: 0.2.38
+        version: 0.2.38(@swc/core@1.7.42)
       '@types/jest':
         specifier: 29.5.14
         version: 29.5.14
@@ -1149,8 +1149,8 @@ packages:
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
 
-  '@swc/jest@0.2.37':
-    resolution: {integrity: sha512-CR2BHhmXKGxTiFr21DYPRHQunLkX3mNIFGFkxBGji6r9uyIR5zftTOVYj1e0sFNMV2H7mf/+vpaglqaryBtqfQ==}
+  '@swc/jest@0.2.38':
+    resolution: {integrity: sha512-HMoZgXWMqChJwffdDjvplH53g9G2ALQes3HKXDEdliB/b85OQ0CTSbxG8VSeCwiAn7cOaDVEt4mwmZvbHcS52w==}
     engines: {npm: '>= 7.0.0'}
     peerDependencies:
       '@swc/core': '*'
@@ -5132,7 +5132,7 @@ snapshots:
 
   '@swc/counter@0.1.3': {}
 
-  '@swc/jest@0.2.37(@swc/core@1.7.42)':
+  '@swc/jest@0.2.38(@swc/core@1.7.42)':
     dependencies:
       '@jest/create-cache-key-function': 29.7.0
       '@swc/core': 1.7.42
