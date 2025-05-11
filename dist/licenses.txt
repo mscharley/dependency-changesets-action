@@ -90,7 +90,7 @@ THE SOFTWARE.
 ---
 
 Name: undici
-Version: 5.28.4
+Version: 5.29.0
 License: MIT
 Private: false
 Description: An HTTP/1.1 client, written from scratch for Node.js
@@ -580,7 +580,7 @@ You may add additional accurate notices of copyright ownership.
 ---
 
 Name: @actions/github
-Version: 6.0.0
+Version: 6.0.1
 License: MIT
 Private: false
 Description: Actions github lib
@@ -835,7 +835,7 @@ License Copyright:
 ---
 
 Name: @octokit/endpoint
-Version: 9.0.5
+Version: 9.0.6
 License: MIT
 Private: false
 Description: Turns REST API endpoints into generic request options
@@ -869,7 +869,7 @@ THE SOFTWARE.
 ---
 
 Name: @octokit/request
-Version: 8.4.0
+Version: 8.4.1
 License: MIT
 Private: false
 Description: Send parameterized requests to GitHub's APIs with sensible defaults in browsers and Node
@@ -987,7 +987,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ---
 
 Name: @octokit/request-error
-Version: 5.1.0
+Version: 5.1.1
 License: MIT
 Private: false
 Description: Error class for Octokit request errors
@@ -1143,7 +1143,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: @octokit/plugin-paginate-rest
-Version: 9.2.1
+Version: 9.2.2
 License: MIT
 Private: false
 Description: Octokit plugin to paginate REST API endpoint responses
