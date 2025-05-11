@@ -27278,9 +27278,9 @@ function requireCore () {
 var coreExports = requireCore();
 
 class TypedDocumentString extends String {
+    __apiType;
     value;
     __meta__;
-    __apiType;
     constructor(value, __meta__) {
         super(value);
         this.value = value;
