@@ -1,14 +1,15 @@
 import { assert } from 'generic-type-guard';
 import { debug } from '@actions/core';
 import type { getOctokit } from '@actions/github';
+import { parse as parseYaml } from 'yaml';
 import type { TypeGuard } from 'generic-type-guard';
 
-export const getFile
+export const getOptionalFile
 	= (octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string) =>
 		<T>(guard: TypeGuard<T>) =>
-			async (path: string): Promise<[string, T]> => {
-				debug(`Fetching package from ${owner}/${repo}/${ref}:${path}`);
-				const packageJsonResponse = await octokit.rest.repos.getContent({
+			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T | null]> => {
+				debug(`Fetching file from ${owner}/${repo}/${ref}:${path}`);
+				const response = await octokit.rest.repos.getContent({
 					owner,
 					repo,
 					ref,
@@ -16,13 +17,36 @@ export const getFile
 					mediaType: {
 						format: 'raw',
 					},
+				}).catch((err) => {
+					if (err instanceof Error) {
+						debug(`Received an error while retrieving file: ${owner}/${repo}/${ref}:${path}`);
+						debug(err.message);
+					}
+					return null;
 				});
+				if (response == null) {
+					return [path, null];
+				}
 
-				if (typeof packageJsonResponse.data !== 'string') {
+				if (typeof response.data !== 'string') {
 					throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${ref}:${path}`);
 				}
-				const packageJson: unknown = JSON.parse(packageJsonResponse.data);
-				assert(packageJson, guard, `Invalid contents for file ${owner}/${repo}/${path}`);
+				const dt = dataType ?? 'json';
+				const data: unknown = dt === 'json' ? JSON.parse(response.data) : parseYaml(response.data);
+				assert(data, guard, `Invalid contents for file ${owner}/${repo}/${path}`);
 
-				return [path, packageJson];
+				return [path, data];
+			};
+
+export const getFile
+	= (octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string) =>
+		<T>(guard: TypeGuard<T>) =>
+			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T]> => {
+				const [p, v] = await getOptionalFile(octokit, owner, repo, ref)(guard)(path, dataType);
+
+				if (v == null) {
+					throw new Error(`No file found on Github, or there was an error fetching the file: ${owner}/${repo}/${ref}:${path}`);
+				}
+
+				return [p, v];
 			};

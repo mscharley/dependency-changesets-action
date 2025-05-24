@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from '@jest/globals';
 
 jest.unstable_mockModule('@actions/core', () => ({ info: (): void => {}, debug: (): void => {} }));
 
-const { isInChangesetScope, isHiddenPrivatePackage } = await import('../processPullRequest.js');
+const { isInChangesetScope, isHiddenPrivatePackage, isInWorkspaces } = await import('../processPullRequest.js');
 
 describe('packageFilters', () => {
 	describe('isInChangesetScope', () => {
@@ -43,6 +43,30 @@ describe('packageFilters', () => {
 
 		it('doesn\'t filter packages which are private if only tagging is enabled', () => {
 			expect(isHiddenPrivatePackage({ privatePackages: { tag: false } })(['', { private: true }])).toBe(true);
+		});
+	});
+
+	describe('isInWorkspaces', () => {
+		it('allows files if there are no workspaces', () => {
+			expect(isInWorkspaces('.changeset', null)(['test/package.json', {}])).toBe(true);
+		});
+
+		it('allows files if they match workspaces', () => {
+			expect(isInWorkspaces('.changeset', ['a/'])(['a/package.json', {}])).toBe(true);
+		});
+
+		it('blocks files if they don\'t match workspaces', () => {
+			expect(isInWorkspaces('.changeset', ['a/'])(['b/package.json', {}])).toBe(false);
+		});
+
+		it('correctly namespaces by changesets location', () => {
+			expect(isInWorkspaces('subdir/.changeset', ['a/'])(['subdir/a/package.json', {}])).toBe(true);
+			expect(isInWorkspaces('subdir/.changeset', ['a/'])(['a/package.json', {}])).toBe(false);
+			expect(isInWorkspaces('subdir/.changeset', ['a/'])(['other/a/package.json', {}])).toBe(false);
+		});
+
+		it('handles globs', () => {
+			expect(isInWorkspaces('.changeset', ['packages/*'])(['packages/a/package.json', {}])).toBe(true);
 		});
 	});
 });

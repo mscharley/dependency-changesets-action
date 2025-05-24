@@ -6,10 +6,12 @@ import type { ActionInput } from './io/parseInput.js';
 import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
 import { debugJson } from './io/debugJson.js';
 import { generateChangeset } from './generateChangeset.js';
+import { Minimatch } from 'minimatch';
 import { parsePatch } from './io/github/parsePatch.js';
 import type { TypeGuard } from 'generic-type-guard';
 
 type PackageFilter = (description: [string, NpmPackage]) => boolean;
+const yes: PackageFilter = () => true;
 
 export const isInChangesetScope = (changesetFolder: string): PackageFilter => {
 	const baseDir = dirname(resolve('/', changesetFolder));
@@ -27,8 +29,24 @@ export const isHiddenPrivatePackage = (config: ChangesetsConfiguration): Package
 		debug(`Filtering private packages`);
 		return ([_, v]) => !(v.private ?? false);
 	} else {
-		return () => true;
+		return yes;
 	}
+};
+
+export const isInWorkspaces = (changesetFolder: string, workspaces: null | string[]): PackageFilter => {
+	if (workspaces == null) {
+		return yes;
+	}
+
+	const baseDir = dirname(resolve('/', changesetFolder));
+	debug(`Filtering packages by workspaces in ${baseDir}`);
+	const validPackageFiles = workspaces.map((w) => new Minimatch(resolve(baseDir, w, 'package.json'), {}));
+
+	return ([path, _]) => {
+		const resolved = resolve('/', path);
+
+		return validPackageFiles.reduce((acc, v) => acc || v.match(resolved), false);
+	};
 };
 
 export const processPullRequest = async (
@@ -63,7 +81,8 @@ export const processPullRequest = async (
 	const validPackageFiles = packageFiles
 		.flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))
 		.filter(isInChangesetScope(input.changesetFolder))
-		.filter(isHiddenPrivatePackage(changesetsConfig));
+		.filter(isHiddenPrivatePackage(changesetsConfig))
+		.filter(isInWorkspaces(input.changesetFolder, workspaces));
 
 	const changeset = generateChangeset(pr, commits[0], input, changesetsConfig, patch, validPackageFiles);
 	if (changeset == null) {

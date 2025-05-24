@@ -1,12 +1,15 @@
 import { debug, info, setOutput } from '@actions/core';
+import { getFile, getOptionalFile } from './io/github/getFile.js';
 import { CreateCommitDocument } from './generated/graphql.js';
 import type { CreateCommitMutationVariables } from './generated/graphql.js';
 import { debugJson } from './io/debugJson.js';
 import { getCommitLog } from './io/github/getCommitLog.js';
 import { getEvent } from './io/getEvent.js';
-import { getFile } from './io/github/getFile.js';
 import { getPrPatch } from './io/github/getPrPatch.js';
 import { isChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
+import { isNpmPackage } from './model/NpmPackage.js';
+import { isPnpmWorkspace } from './model/PnpmWorkspace.js';
+import { join } from 'node:path';
 import { parseInput } from './io/parseInput.js';
 import { processPullRequest } from './processPullRequest.js';
 
@@ -31,11 +34,16 @@ export async function run(): Promise<void> {
 	}
 
 	const getFromGithub = getFile(octokit, owner, repo, ref);
-	const commits = await getCommitLog(octokit, owner, repo, pr);
-	const [, changesetsConfig] = await getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
+	const maybeGetFromGithub = getOptionalFile(octokit, owner, repo, ref);
+	const [commits, patchString, [, changesetsConfig], [, pnpmWorkspaces], [, rootPackageJson]] = await Promise.all([
+		getCommitLog(octokit, owner, repo, pr),
+		getPrPatch(octokit, owner, repo, pr.number),
+		getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`),
+		maybeGetFromGithub(isPnpmWorkspace)(join(input.changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
+		maybeGetFromGithub(isNpmPackage)(join(input.changesetFolder, '../package.json')),
+	]);
 	debugJson('Changesets configuration', changesetsConfig);
 
-	const patchString = await getPrPatch(octokit, owner, repo, pr.number);
 	const changeset = await processPullRequest(
 		input,
 		owner,
@@ -44,7 +52,7 @@ export async function run(): Promise<void> {
 		patchString,
 		changesetsConfig,
 		commits,
-		null,
+		pnpmWorkspaces?.packages ?? rootPackageJson?.workspaces ?? null,
 		getFromGithub,
 	);
 	if (changeset == null) {
