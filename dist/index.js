@@ -36165,7 +36165,7 @@ function requireDist () {
 var distExports = requireDist();
 
 const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, dataType) => {
-    coreExports.debug(`Fetching file from ${owner}/${repo}/${ref}:${path}`);
+    coreExports.debug(`Fetching file from ${owner}/${repo}#${ref}:${path}`);
     const response = await octokit.rest.repos.getContent({
         owner,
         repo,
@@ -36174,22 +36174,28 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
         mediaType: {
             format: 'raw',
         },
-    }).catch(() => null);
+    }).catch((err) => {
+        if (err instanceof Error) {
+            coreExports.debug(`Received an error while retrieving file: ${owner}/${repo}#${ref}:${path}`);
+            coreExports.debug(err.message);
+        }
+        return null;
+    });
     if (response == null) {
         return [path, null];
     }
     if (typeof response.data !== 'string') {
-        throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}/${ref}:${path}`);
+        throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
     }
     const dt = dataType ?? 'json';
     const data = dt === 'json' ? JSON.parse(response.data) : distExports.parse(response.data);
-    assert(data, guard, `Invalid contents for file ${owner}/${repo}/${path}`);
+    assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
     return [path, data];
 };
 const getFile = (octokit, owner, repo, ref) => (guard) => async (path, dataType) => {
     const [p, v] = await getOptionalFile(octokit, owner, repo, ref)(guard)(path, dataType);
     if (v == null) {
-        throw new Error(`No file found on Github, or there was an error fetching the file: ${owner}/${repo}/${ref}:${path}`);
+        throw new Error(`No file found on Github, or there was an error fetching the file: ${owner}/${repo}#${ref}:${path}`);
     }
     return [p, v];
 };
