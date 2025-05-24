@@ -36,6 +36,12 @@ inputs:
     description: 'Generate signed commits. This uses a different Github API which conflicts with custom author information.'
     required: false
     default: 'false'
+  packages-detection-strategy:
+    description: |
+      The detection strategy for the affected packages, since this action only relies on affected files diff.
+      Possible values: `diff-only` (default) and `recursive-discovery`
+    required: true
+    default: diff-only
 
 # Define your outputs here.
 outputs:
