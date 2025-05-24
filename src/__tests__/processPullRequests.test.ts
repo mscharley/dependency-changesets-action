@@ -1,9 +1,12 @@
 import type { Commit, PullRequest } from '../model/Github.js';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import type { ActionInput } from '../io/parseInput.js';
 import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
 import type { DeepPartial } from './test-utils.js';
-import { processPullRequest } from '../processPullRequest.js';
+
+jest.unstable_mockModule('@actions/core', () => ({ info: (): void => {}, debug: (): void => {} }));
+
+const { processPullRequest } = await import('../processPullRequest.js');
 
 const owner = 'mscharley';
 const repo = 'dependency-changesets-action';

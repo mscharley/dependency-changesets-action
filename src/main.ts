@@ -1,4 +1,4 @@
-import { debug, setOutput } from '@actions/core';
+import { debug, info, setOutput } from '@actions/core';
 import { CreateCommitDocument } from './generated/graphql.js';
 import type { CreateCommitMutationVariables } from './generated/graphql.js';
 import { debugJson } from './io/debugJson.js';
@@ -19,7 +19,7 @@ export async function run(): Promise<void> {
 	const { octokit, ...input } = parseInput();
 	const { pull_request: pr } = await getEvent();
 	if (pr.state !== 'open') {
-		console.log(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
+		info(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
 		return;
 	}
 
