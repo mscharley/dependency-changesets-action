@@ -44,6 +44,7 @@ export async function run(): Promise<void> {
 		patchString,
 		changesetsConfig,
 		commits,
+		null,
 		getFromGithub,
 	);
 	if (changeset == null) {

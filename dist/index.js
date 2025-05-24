@@ -28,7 +28,7 @@ import require$$0$9 from 'diagnostics_channel';
 import require$$2$3 from 'child_process';
 import require$$6$1 from 'timers';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -31569,6 +31569,15 @@ const parseInput = () => {
     };
 };
 
+/* eslint-disable @typescript-eslint/no-type-alias */
+const isNpmPackage = new IsInterface()
+    .withOptionalProperties({
+    name: isString,
+    workspaces: isArray(isString),
+    private: isBoolean,
+})
+    .get();
+
 const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
 /**
  * Parses a commit message into a release type
@@ -31604,11 +31613,11 @@ const generateChangeset = (pr, { commit }, input, changesets, patch, packageFile
     coreExports.debug(`Processing PR #${pr.number}: ${pr.title}`);
     const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(commit.message) : 'patch';
     if (updateType === 'none') {
-        console.log('Detected an update type of none, skipping this PR');
+        coreExports.info('Detected an update type of none, skipping this PR');
         return null;
     }
     if (patch.foundChangeset) {
-        console.log('Changeset has already been pushed');
+        coreExports.info('Changeset has already been pushed');
         return null;
     }
     debugJson('Found patched package files', packageFiles);
@@ -31627,7 +31636,7 @@ const generateChangeset = (pr, { commit }, input, changesets, patch, packageFile
     debugJson('Mapping for packages', packageMap);
     const affectedPackages = Object.values(packageMap);
     if (affectedPackages.length < 1) {
-        console.log('No package.json files were updated');
+        coreExports.info('No package.json files were updated');
         return null;
     }
     return {
@@ -31636,15 +31645,6 @@ const generateChangeset = (pr, { commit }, input, changesets, patch, packageFile
         updateType,
     };
 };
-
-/* eslint-disable @typescript-eslint/no-type-alias */
-const isNpmPackage = new IsInterface()
-    .withOptionalProperties({
-    name: isString,
-    workspaces: isArray(isString),
-    private: isBoolean,
-})
-    .get();
 
 const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
 const parsePatch = (patch, changesetFile) => {
@@ -31655,7 +31655,23 @@ const parsePatch = (patch, changesetFile) => {
     };
 };
 
-const processPullRequest = async (input, owner, repo, pr, patchString, changesetsConfig, commits, getFile) => {
+const isInChangesetScope = (changesetFolder) => {
+    const baseDir = dirname(resolve('/', changesetFolder));
+    return ([path, _]) => resolve('/', path).startsWith(baseDir);
+};
+const isNotInvalidPrivatePackage = (config) => {
+    const filterPrivatePackages = typeof config.privatePackages === 'boolean'
+        ? !config.privatePackages
+        : !(config.privatePackages?.version ?? true);
+    if (filterPrivatePackages) {
+        coreExports.debug(`Filtering private packages`);
+        return ([_, v]) => !(v.private ?? false);
+    }
+    else {
+        return () => true;
+    }
+};
+const processPullRequest = async (input, owner, repo, pr, patchString, changesetsConfig, commits, workspaces, getFile) => {
     if (commits.length !== 1) {
         debugJson('Refusing to update a PR with more than one commit', commits);
         return null;
@@ -31664,7 +31680,7 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
     const name = `dependencies-GH-${pr.number}.md`;
     coreExports.debug(`Writing changeset named ${name}`);
     const outputPath = join(input.changesetFolder, name);
-    console.log(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
+    coreExports.info(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
     coreExports.debug('Fetching patch');
     const patch = parsePatch(patchString, outputPath);
     const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(isNpmPackage)));
@@ -31672,13 +31688,10 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
     if (errs.length > 0) {
         throw new AggregateError(errs.map((v) => v.reason));
     }
-    const filterPrivatePackages = typeof changesetsConfig.privatePackages === 'boolean'
-        ? !changesetsConfig.privatePackages
-        : !(changesetsConfig.privatePackages?.version ?? true);
-    coreExports.debug(`Filtering private packages: ${filterPrivatePackages}`);
     const validPackageFiles = packageFiles
         .flatMap((v) => (v.status === 'fulfilled' ? [v.value] : []))
-        .filter(([_, v]) => !filterPrivatePackages || !(v.private ?? false));
+        .filter(isInChangesetScope(input.changesetFolder))
+        .filter(isNotInvalidPrivatePackage(changesetsConfig));
     const changeset = generateChangeset(pr, commits[0], input, changesetsConfig, patch, validPackageFiles);
     if (changeset == null) {
         return null;
@@ -31702,7 +31715,7 @@ async function run() {
     const { octokit, ...input } = parseInput();
     const { pull_request: pr } = await getEvent();
     if (pr.state !== 'open') {
-        console.log(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
+        coreExports.info(`Short-circuiting as it appears this pull request is not open: ${pr.state}`);
         return;
     }
     const owner = pr.base.repo.owner?.login ?? pr.base.repo.organization;
@@ -31716,7 +31729,7 @@ async function run() {
     const [, changesetsConfig] = await getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`);
     debugJson('Changesets configuration', changesetsConfig);
     const patchString = await getPrPatch(octokit, owner, repo, pr.number);
-    const changeset = await processPullRequest(input, owner, repo, pr, patchString, changesetsConfig, commits, getFromGithub);
+    const changeset = await processPullRequest(input, owner, repo, pr, patchString, changesetsConfig, commits, null, getFromGithub);
     if (changeset == null) {
         coreExports.setOutput('created-changeset', false);
         return;
