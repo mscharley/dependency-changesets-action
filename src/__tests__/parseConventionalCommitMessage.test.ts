@@ -1,5 +1,8 @@
-import { describe, expect, it } from '@jest/globals';
-import { parseConventionalCommitMessage } from '../parseConventionalCommitMessage.js';
+import { describe, expect, it, jest } from '@jest/globals';
+
+jest.unstable_mockModule('@actions/core', () => ({ info: (): void => {}, debug: (): void => {} }));
+
+const { parseConventionalCommitMessage } = await import('../parseConventionalCommitMessage.js');
 
 describe('parseConventionalCommitMessage', () => {
 	describe('none', () => {

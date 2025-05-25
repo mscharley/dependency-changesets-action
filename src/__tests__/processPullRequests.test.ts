@@ -1,9 +1,12 @@
 import type { Commit, PullRequest } from '../model/Github.js';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import type { ActionInput } from '../io/parseInput.js';
 import type { ChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
 import type { DeepPartial } from './test-utils.js';
-import { processPullRequest } from '../processPullRequest.js';
+
+jest.unstable_mockModule('@actions/core', () => ({ info: (): void => {}, debug: (): void => {} }));
+
+const { processPullRequest } = await import('../processPullRequest.js');
 
 const owner = 'mscharley';
 const repo = 'dependency-changesets-action';
@@ -47,6 +50,7 @@ describe('processPullRequests', () => {
 				'',
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({}), partial<Commit>({})],
+				null,
 				getFiles({}),
 			),
 		).resolves.toBeNull();
@@ -62,6 +66,7 @@ describe('processPullRequests', () => {
 				'',
 				partial<ChangesetsConfiguration>({}),
 				[],
+				null,
 				getFiles({}),
 			),
 		).resolves.toBeNull();
@@ -81,6 +86,7 @@ describe('processPullRequests', () => {
 				validDiff,
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test' },
 				}),
@@ -110,6 +116,7 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: false }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -131,6 +138,7 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -152,6 +160,7 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -181,6 +190,7 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false, tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),

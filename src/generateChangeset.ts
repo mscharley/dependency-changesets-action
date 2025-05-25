@@ -1,7 +1,7 @@
 import type { Commit, PullRequest } from './model/Github.js';
+import { debug, info } from '@actions/core';
 import type { ActionInput } from './io/parseInput.js';
 import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
-import { debug } from '@actions/core';
 import { debugJson } from './io/debugJson.js';
 import type { NpmPackage } from './model/NpmPackage.js';
 import { parseConventionalCommitMessage } from './parseConventionalCommitMessage.js';
@@ -24,12 +24,12 @@ export const generateChangeset = (
 	debug(`Processing PR #${pr.number}: ${pr.title}`);
 	const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(commit.message) : 'patch';
 	if (updateType === 'none') {
-		console.log('Detected an update type of none, skipping this PR');
+		info('Detected an update type of none, skipping this PR');
 		return null;
 	}
 
 	if (patch.foundChangeset) {
-		console.log('Changeset has already been pushed');
+		info('Changeset has already been pushed');
 		return null;
 	}
 	debugJson('Found patched package files', packageFiles);
@@ -52,7 +52,7 @@ export const generateChangeset = (
 	const affectedPackages = Object.values(packageMap);
 
 	if (affectedPackages.length < 1) {
-		console.log('No package.json files were updated');
+		info('No package.json files were updated');
 		return null;
 	}
 

@@ -1,6 +1,9 @@
-import { changesets, commit, input, pr } from './test-utils.js';
-import { describe, expect, it } from '@jest/globals';
-import { generateChangeset } from '../generateChangeset.js';
+import { describe, expect, it, jest } from '@jest/globals';
+
+jest.unstable_mockModule('@actions/core', () => ({ info: (): void => {}, debug: (): void => {} }));
+
+const { changesets, commit, input, pr } = await import('./test-utils.js');
+const { generateChangeset } = await import('../generateChangeset.js');
 
 describe('generateChangeset', () => {
 	describe('conventional commits', () => {
