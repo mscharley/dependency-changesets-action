@@ -1188,20 +1188,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-Name: balanced-match
-Version: 1.0.2
+Name: @isaacs/balanced-match
+Version: 4.0.1
 License: MIT
 Private: false
 Description: Match balanced character pairs, like "{" and "}"
-Repository: git://github.com/juliangruber/balanced-match.git
-Homepage: https://github.com/juliangruber/balanced-match
-Author: Julian Gruber <mail@juliangruber.com> (http://juliangruber.com)
+Repository: git://github.com/isaacs/balanced-match.git
 License Copyright:
 ===
 
 (MIT)
 
-Copyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt;
+Original code Copyright Julian Gruber <julian@juliangruber.com>
+
+Port to TypeScript Copyright Isaac Z. Schlueter <i@izs.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1223,20 +1223,19 @@ SOFTWARE.
 
 ---
 
-Name: brace-expansion
-Version: 2.0.1
+Name: @isaacs/brace-expansion
+Version: 5.0.0
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
-Repository: git://github.com/juliangruber/brace-expansion.git
-Homepage: https://github.com/juliangruber/brace-expansion
-Author: Julian Gruber <mail@juliangruber.com> (http://juliangruber.com)
 License Copyright:
 ===
 
 MIT License
 
-Copyright (c) 2013 Julian Gruber <julian@juliangruber.com>
+Copyright Julian Gruber <julian@juliangruber.com>
+
+TypeScript port Copyright Isaac Z. Schlueter <i@izs.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1259,7 +1258,7 @@ SOFTWARE.
 ---
 
 Name: minimatch
-Version: 10.0.1
+Version: 10.0.3
 License: ISC
 Private: false
 Description: a glob matcher in javascript
