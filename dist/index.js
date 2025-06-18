@@ -42518,10 +42518,21 @@ async function run() {
     coreExports.setOutput('created-changeset', true);
 }
 
+const stringifyError = (error) => {
+    if (error instanceof AggregateError) {
+        return error.errors.map(stringifyError).join('\n\n');
+    }
+    if (error.stack == null) {
+        return error.message;
+    }
+    return error.stack;
+};
+
 await run().catch((error) => {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) {
-        coreExports.setFailed(error);
+        const errorText = stringifyError(error);
+        coreExports.setFailed(errorText);
     }
     else {
         coreExports.setFailed(`${error}`);
