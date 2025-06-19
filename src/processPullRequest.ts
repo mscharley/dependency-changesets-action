@@ -27,7 +27,7 @@ export const isHiddenPrivatePackage = (config: ChangesetsConfiguration): Package
 
 	if (filterPrivatePackages) {
 		debug(`Filtering private packages`);
-		return ([_, v]) => !(v.private ?? false);
+		return ([_, v]) => !((typeof v.private === 'string' ? v.private === 'true' : v.private) ?? false);
 	} else {
 		return yes;
 	}
