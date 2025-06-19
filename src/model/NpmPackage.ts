@@ -1,12 +1,22 @@
 /* eslint-disable @typescript-eslint/no-type-alias */
-import { isArray, isBoolean, IsInterface, isString } from 'generic-type-guard';
-import type { GuardedType } from 'generic-type-guard';
+import {
+	type GuardedType,
+	isArray,
+	isBoolean,
+	IsInterface,
+	isString,
+	isUnion,
+	type TypeGuard,
+} from 'generic-type-guard';
+
+const isBooleanString: TypeGuard<'true' | 'false'> = (s: unknown): s is 'true' | 'false' =>
+	typeof s === 'string' && ['true', 'false'].includes(s);
 
 export const isNpmPackage = new IsInterface()
 	.withOptionalProperties({
 		name: isString,
 		workspaces: isArray(isString),
-		private: isBoolean,
+		private: isUnion(isBoolean, isBooleanString),
 	})
 	.get();
 export type NpmPackage = GuardedType<typeof isNpmPackage>;
