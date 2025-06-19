@@ -1,6 +1,8 @@
-import { getBooleanInput, getInput, warning } from '@actions/core';
+import { getBooleanInput, getInput, info, warning } from '@actions/core';
+import { throttling, type ThrottlingOptions } from '@octokit/plugin-throttling';
 import { debugJson } from './debugJson.js';
 import { getOctokit } from '@actions/github';
+import type { OctokitClient } from '../model/Github.js';
 
 const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
 
@@ -11,7 +13,7 @@ export interface ActionInput {
 	};
 	changesetFolder: string;
 	commitMessage: string;
-	octokit: ReturnType<typeof getOctokit>;
+	octokit: OctokitClient;
 	useConventionalCommits: boolean;
 	signCommits: boolean;
 }
@@ -45,8 +47,24 @@ export const parseInput = (): ActionInput => {
 	};
 	debugJson('input', input);
 
-	return {
-		...input,
-		octokit: getOctokit(getInput('token', { required: true })),
+	const throttlingOptions: ThrottlingOptions = {
+		onRateLimit: (retryAfter, options) => {
+			warning(`Request quota exhausted for request ${options.method} ${options.url}`);
+			if (options.request.retryCount === 0) {
+				// only retries once
+				info(`Retrying after ${retryAfter} seconds!`);
+				return true;
+			}
+			return false;
+		},
+		onSecondaryRateLimit: (_retryAfter, options) => {
+			// does not retry, only logs a warning
+			warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+		},
 	};
+	const octokit = getOctokit(getInput('token', { required: true }), {
+		throttle: throttlingOptions,
+	}, throttling);
+
+	return { ...input, octokit };
 };
