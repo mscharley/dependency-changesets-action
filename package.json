@@ -51,7 +51,7 @@
 		"@rollup/plugin-node-resolve": "16.0.1",
 		"@rollup/plugin-typescript": "12.1.2",
 		"@swc/jest": "0.2.38",
-		"@types/jest": "29.5.14",
+		"@types/jest": "30.0.0",
 		"@types/node": "20.19.1",
 		"jest": "30.0.0",
 		"js-yaml": "4.1.0",
