@@ -1,9 +1,9 @@
 import { debug } from '@actions/core';
 import { debugJson } from '../debugJson.js';
-import type { getOctokit } from '@actions/github';
+import type { OctokitClient } from '../../model/Github.js';
 
 export const getPrPatch = async (
-	octokit: ReturnType<typeof getOctokit>,
+	octokit: OctokitClient,
 	owner: string,
 	repo: string,
 	pullNumber: number,

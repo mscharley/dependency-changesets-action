@@ -1,11 +1,11 @@
 import { assert } from 'generic-type-guard';
 import { debug } from '@actions/core';
-import type { getOctokit } from '@actions/github';
+import type { OctokitClient } from '../../model/Github.js';
 import { parse as parseYaml } from 'yaml';
 import type { TypeGuard } from 'generic-type-guard';
 
 export const getOptionalFile
-	= (octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string) =>
+	= (octokit: OctokitClient, owner: string, repo: string, ref: string) =>
 		<T>(guard: TypeGuard<T>) =>
 			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T | null]> => {
 				debug(`Fetching file from ${owner}/${repo}#${ref}:${path}`);
@@ -39,7 +39,7 @@ export const getOptionalFile
 			};
 
 export const getFile
-	= (octokit: ReturnType<typeof getOctokit>, owner: string, repo: string, ref: string) =>
+	= (octokit: OctokitClient, owner: string, repo: string, ref: string) =>
 		<T>(guard: TypeGuard<T>) =>
 			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T]> => {
 				const [p, v] = await getOptionalFile(octokit, owner, repo, ref)(guard)(path, dataType);

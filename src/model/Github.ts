@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-type-alias */
 import type { getOctokit } from '@actions/github';
 
+export type OctokitClient = ReturnType<typeof getOctokit>;
+
 export interface Ref {
 	ref: string;
 	sha: string;
