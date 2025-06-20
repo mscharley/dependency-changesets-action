@@ -197,4 +197,34 @@ fix: update test package
 			),
 		).resolves.toBeNull();
 	});
+
+	it('will not exclude a package if marked public with a stringified `private: "false"` and private packages are disabled in changesets', async () => {
+		await expect(
+			processPullRequest(
+				partial<ActionInput>({ changesetFolder: '.changeset' }),
+				owner,
+				repo,
+				partial<PullRequest>({
+					number: 10,
+					title: 'fix: update test package',
+					head: { ref: 'update-test' },
+				}),
+				validDiff,
+				partial<ChangesetsConfiguration>({ privatePackages: false }),
+				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				null,
+				getFiles({
+					'package.json': { name: '@mscharley/test', private: 'false' },
+				}),
+			),
+		).resolves.toMatchObject({
+			content: `---
+"@mscharley/test": patch
+---
+
+fix: update test package
+`,
+			outputPath: '.changeset/dependencies-GH-10.md',
+		});
+	});
 });

@@ -27316,8 +27316,18 @@ var assert = function(value, guard, message) {
     throw new AssertionError(value, message !== null && message !== void 0 ? message : "Invalid value provided: ".concat(JSON.stringify(value)));
   }
 };
+var MINIMUM_ARRAY_INDEX = 0;
 var isString = function(s) {
   return typeof s === "string";
+};
+var isSingletonStringUnion = function() {
+  var ss = [];
+  for (var _i = 0; _i < arguments.length; _i++) {
+    ss[_i] = arguments[_i];
+  }
+  return function(s) {
+    return ss.indexOf(s) >= MINIMUM_ARRAY_INDEX;
+  };
 };
 var isBoolean = function(b) {
   return typeof b === "boolean";
@@ -36275,7 +36285,7 @@ const isNpmPackage = new IsInterface()
     .withOptionalProperties({
     name: isString,
     workspaces: isArray(isString),
-    private: isBoolean,
+    private: isUnion(isBoolean, isSingletonStringUnion('true', 'false')),
 })
     .get();
 
@@ -44131,7 +44141,7 @@ const isHiddenPrivatePackage = (config) => {
         : !(config.privatePackages?.version ?? true);
     if (filterPrivatePackages) {
         coreExports.debug(`Filtering private packages`);
-        return ([_, v]) => !(v.private ?? false);
+        return ([_, v]) => !((typeof v.private === 'string' ? v.private === 'true' : v.private) ?? false);
     }
     else {
         return yes;
