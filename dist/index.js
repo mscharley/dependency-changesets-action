@@ -42357,10 +42357,11 @@ const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
 const getAuthor = () => {
     const name = coreExports.getInput('author-name');
     const email = coreExports.getInput('author-email');
+    const dco = coreExports.getBooleanInput('author-dco', { required: true });
     if (name === '' || email === '') {
         return undefined;
     }
-    return { name, email };
+    return { name, email, dco };
 };
 const parseInput = () => {
     const hasSemanticCommitConfig = process.env[USE_SEMANTIC_COMMITS] != null && process.env[USE_SEMANTIC_COMMITS] !== '';
@@ -44559,6 +44560,15 @@ ${changeset.message}
     };
 };
 
+const generateCommitMessage = (input) => {
+    if (input.author?.dco === true) {
+        return `${input.commitMessage}\n\nSigned-off-by: ${input.author.name} <${input.author.email}>`;
+    }
+    else {
+        return input.commitMessage;
+    }
+};
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -44592,6 +44602,7 @@ async function run() {
         coreExports.setOutput('created-changeset', false);
         return;
     }
+    const commitMessage = generateCommitMessage(input);
     const { content, outputPath } = changeset;
     if (input.signCommits) {
         coreExports.debug('Pushing changeset to Github');
@@ -44606,7 +44617,7 @@ async function run() {
                     branchName: pr.head.ref,
                 },
                 message: {
-                    headline: input.commitMessage,
+                    headline: commitMessage,
                 },
                 expectedHeadOid: pr.head.sha,
                 fileChanges: {
@@ -44628,7 +44639,7 @@ async function run() {
                 repo,
                 branch: ref,
                 path: outputPath,
-                message: input.commitMessage,
+                message: commitMessage,
                 content: Buffer.from(content, 'utf8').toString('base64'),
                 author: input.author,
             });
