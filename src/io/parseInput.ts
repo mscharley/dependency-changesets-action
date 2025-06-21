@@ -10,6 +10,7 @@ export interface ActionInput {
 	author?: {
 		name: string;
 		email: string;
+		dco: boolean;
 	};
 	changesetFolder: string;
 	commitMessage: string;
@@ -18,14 +19,15 @@ export interface ActionInput {
 	signCommits: boolean;
 }
 
-const getAuthor = (): undefined | { name: string; email: string } => {
+const getAuthor = (): ActionInput['author'] => {
 	const name = getInput('author-name');
 	const email = getInput('author-email');
+	const dco = getBooleanInput('author-dco', { required: true });
 	if (name === '' || email === '') {
 		return undefined;
 	}
 
-	return { name, email };
+	return { name, email, dco };
 };
 
 export const parseInput = (): ActionInput => {
@@ -44,7 +46,7 @@ export const parseInput = (): ActionInput => {
 			? getBooleanInput('use-semantic-commits', { required: true })
 			: getBooleanInput('use-conventional-commits', { required: true }),
 		signCommits: getBooleanInput('sign-commits', { required: true }),
-	};
+	} satisfies Omit<ActionInput, 'octokit'>;
 	debugJson('input', input);
 
 	const throttlingOptions: ThrottlingOptions = {

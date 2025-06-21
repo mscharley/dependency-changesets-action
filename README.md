@@ -43,6 +43,10 @@ This action will watch for pull requests from these services and add a changeset
     # Default: no custom author
     author-name: ''
     author-email: ''
+    # If there is a custom author configured, should this author sign their commits with DCO?
+    #
+    # Default: false
+    author-dco: false
 
     # Generate signed commits.
     #

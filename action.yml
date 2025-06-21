@@ -32,6 +32,10 @@ inputs:
   author-email:
     description: 'The email for the author to use when committing'
     required: false
+  author-dco:
+    description: 'Whether a custom author should sign off using DCO'
+    required: false
+    default: 'false'
   sign-commits:
     description: 'Generate signed commits. This uses a different Github API which conflicts with custom author information.'
     required: false
