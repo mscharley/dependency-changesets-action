@@ -36602,6 +36602,15 @@ const debugJson = (message, obj) => {
     coreExports.debug(`${message}: ${JSON.stringify(obj, undefined, DEBUG_INDENT)}`);
 };
 
+const generateCommitMessage = (input) => {
+    if (input.author?.dco === true) {
+        return `${input.commitMessage}\n\nSigned-off-by: ${input.author.name} <${input.author.email}>`;
+    }
+    else {
+        return input.commitMessage;
+    }
+};
+
 const getCommitLog = async (octokit, owner, repo, pr) => {
     const commits = await octokit.rest.pulls.listCommits({ owner, repo, pull_number: pr.number });
     return commits.data;
@@ -44558,15 +44567,6 @@ ${changeset.message}
 `,
         outputPath,
     };
-};
-
-const generateCommitMessage = (input) => {
-    if (input.author?.dco === true) {
-        return `${input.commitMessage}\n\nSigned-off-by: ${input.author.name} <${input.author.email}>`;
-    }
-    else {
-        return input.commitMessage;
-    }
 };
 
 /**

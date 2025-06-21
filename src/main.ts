@@ -3,6 +3,7 @@ import { getFile, getOptionalFile } from './io/github/getFile.js';
 import { CreateCommitDocument } from './generated/graphql.js';
 import type { CreateCommitMutationVariables } from './generated/graphql.js';
 import { debugJson } from './io/debugJson.js';
+import { generateCommitMessage } from './generateCommitMessage.js';
 import { getCommitLog } from './io/github/getCommitLog.js';
 import { getEvent } from './io/getEvent.js';
 import { getPrPatch } from './io/github/getPrPatch.js';
@@ -12,7 +13,6 @@ import { isPnpmWorkspace } from './model/PnpmWorkspace.js';
 import { join } from 'node:path';
 import { parseInput } from './io/parseInput.js';
 import { processPullRequest } from './processPullRequest.js';
-import { generateCommitMessage } from './generateCommitMessage.js';
 
 /**
  * The main function for the action.
