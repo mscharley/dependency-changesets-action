@@ -12,6 +12,7 @@ import { isPnpmWorkspace } from './model/PnpmWorkspace.js';
 import { join } from 'node:path';
 import { parseInput } from './io/parseInput.js';
 import { processPullRequest } from './processPullRequest.js';
+import { generateCommitMessage } from './generateCommitMessage.js';
 
 /**
  * The main function for the action.
@@ -60,6 +61,7 @@ export async function run(): Promise<void> {
 		return;
 	}
 
+	const commitMessage = generateCommitMessage(input);
 	const { content, outputPath } = changeset;
 	if (input.signCommits) {
 		debug('Pushing changeset to Github');
@@ -74,7 +76,7 @@ export async function run(): Promise<void> {
 					branchName: pr.head.ref,
 				},
 				message: {
-					headline: input.commitMessage,
+					headline: commitMessage,
 				},
 				expectedHeadOid: pr.head.sha,
 				fileChanges: {
@@ -95,7 +97,7 @@ export async function run(): Promise<void> {
 				repo,
 				branch: ref,
 				path: outputPath,
-				message: input.commitMessage,
+				message: commitMessage,
 				content: Buffer.from(content, 'utf8').toString('base64'),
 				author: input.author,
 			});
