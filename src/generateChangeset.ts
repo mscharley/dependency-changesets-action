@@ -3,6 +3,7 @@ import { debug, info } from '@actions/core';
 import type { ActionInput } from './io/parseInput.js';
 import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
 import { debugJson } from './io/debugJson.js';
+import { minimatch } from 'minimatch';
 import type { NpmPackage } from './model/NpmPackage.js';
 import { parseConventionalCommitMessage } from './parseConventionalCommitMessage.js';
 import type { PatchResults } from './io/github/parsePatch.js';
@@ -39,7 +40,7 @@ export const generateChangeset = (
 	const packageMap = Object.fromEntries(
 		packageFiles.flatMap(([path, p]): Array<[string, string]> => {
 			const isMetaPackage = p.workspaces != null;
-			const isIgnored = ignoredPackages.includes(p.name ?? '');
+			const isIgnored = ignoredPackages.find((i) => minimatch(p.name ?? '', i)) != null;
 			if (isMetaPackage || isIgnored || p.name == null) {
 				return [];
 			} else {

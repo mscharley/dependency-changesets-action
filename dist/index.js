@@ -42408,74 +42408,6 @@ const parseInput = () => {
     return { ...input, octokit };
 };
 
-const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
-/**
- * Parses a commit message into a release type
- */
-const parseConventionalCommitMessage = (message) => {
-    coreExports.debug(`Treating commit message as a conventional commit: ${message}`);
-    const match = message.match(conventionalCommit);
-    if (match == null) {
-        return 'none';
-    }
-    const [, type, _scope, major, _msg, body] = match;
-    if ((body ?? '').match(/^BREAKING[- ]CHANGE:/mu) != null) {
-        coreExports.debug('Treating this commit as a major update.');
-        return 'major';
-    }
-    else if (major === '!') {
-        coreExports.debug('Treating this commit as a major update.');
-        return 'major';
-    }
-    else if (type === 'fix') {
-        coreExports.debug('Treating this commit as a patch update.');
-        return 'patch';
-    }
-    else if (type === 'feat') {
-        coreExports.debug('Treating this commit as a minor update.');
-        return 'minor';
-    }
-    coreExports.debug('No releaseable change in the commit message, ignoring this commit.');
-    return 'none';
-};
-
-const generateChangeset = (pr, { commit }, input, changesets, patch, packageFiles) => {
-    coreExports.debug(`Processing PR #${pr.number}: ${pr.title}`);
-    const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(commit.message) : 'patch';
-    if (updateType === 'none') {
-        coreExports.info('Detected an update type of none, skipping this PR');
-        return null;
-    }
-    if (patch.foundChangeset) {
-        coreExports.info('Changeset has already been pushed');
-        return null;
-    }
-    debugJson('Found patched package files', packageFiles);
-    const ignoredPackages = changesets.ignore ?? [];
-    debugJson('Found ignored packages', ignoredPackages);
-    const packageMap = Object.fromEntries(packageFiles.flatMap(([path, p]) => {
-        const isMetaPackage = p.workspaces != null;
-        const isIgnored = ignoredPackages.includes(p.name ?? '');
-        if (isMetaPackage || isIgnored || p.name == null) {
-            return [];
-        }
-        else {
-            return [[path, p.name]];
-        }
-    }));
-    debugJson('Mapping for packages', packageMap);
-    const affectedPackages = Object.values(packageMap);
-    if (affectedPackages.length < 1) {
-        coreExports.info('No package.json files were updated');
-        return null;
-    }
-    return {
-        affectedPackages,
-        message: commit.message,
-        updateType,
-    };
-};
-
 const balanced = (a, b, str) => {
     const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
     const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
@@ -44494,6 +44426,74 @@ minimatch.AST = AST;
 minimatch.Minimatch = Minimatch;
 minimatch.escape = escape;
 minimatch.unescape = unescape;
+
+const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
+/**
+ * Parses a commit message into a release type
+ */
+const parseConventionalCommitMessage = (message) => {
+    coreExports.debug(`Treating commit message as a conventional commit: ${message}`);
+    const match = message.match(conventionalCommit);
+    if (match == null) {
+        return 'none';
+    }
+    const [, type, _scope, major, _msg, body] = match;
+    if ((body ?? '').match(/^BREAKING[- ]CHANGE:/mu) != null) {
+        coreExports.debug('Treating this commit as a major update.');
+        return 'major';
+    }
+    else if (major === '!') {
+        coreExports.debug('Treating this commit as a major update.');
+        return 'major';
+    }
+    else if (type === 'fix') {
+        coreExports.debug('Treating this commit as a patch update.');
+        return 'patch';
+    }
+    else if (type === 'feat') {
+        coreExports.debug('Treating this commit as a minor update.');
+        return 'minor';
+    }
+    coreExports.debug('No releaseable change in the commit message, ignoring this commit.');
+    return 'none';
+};
+
+const generateChangeset = (pr, { commit }, input, changesets, patch, packageFiles) => {
+    coreExports.debug(`Processing PR #${pr.number}: ${pr.title}`);
+    const updateType = input.useConventionalCommits ? parseConventionalCommitMessage(commit.message) : 'patch';
+    if (updateType === 'none') {
+        coreExports.info('Detected an update type of none, skipping this PR');
+        return null;
+    }
+    if (patch.foundChangeset) {
+        coreExports.info('Changeset has already been pushed');
+        return null;
+    }
+    debugJson('Found patched package files', packageFiles);
+    const ignoredPackages = changesets.ignore ?? [];
+    debugJson('Found ignored packages', ignoredPackages);
+    const packageMap = Object.fromEntries(packageFiles.flatMap(([path, p]) => {
+        const isMetaPackage = p.workspaces != null;
+        const isIgnored = ignoredPackages.find((i) => minimatch(p.name ?? '', i)) != null;
+        if (isMetaPackage || isIgnored || p.name == null) {
+            return [];
+        }
+        else {
+            return [[path, p.name]];
+        }
+    }));
+    debugJson('Mapping for packages', packageMap);
+    const affectedPackages = Object.values(packageMap);
+    if (affectedPackages.length < 1) {
+        coreExports.info('No package.json files were updated');
+        return null;
+    }
+    return {
+        affectedPackages,
+        message: commit.message,
+        updateType,
+    };
+};
 
 const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
 const parsePatch = (patch, changesetFile) => {

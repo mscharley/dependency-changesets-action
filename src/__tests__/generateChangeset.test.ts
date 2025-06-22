@@ -101,6 +101,23 @@ describe('generateChangeset', () => {
 		});
 	});
 
+	it('will exclude a package if it is listed as an ignored glob for changesets', () => {
+		expect(
+			generateChangeset(
+				pr({}),
+				commit({ commit: { message: 'fix: hello, world' } }),
+				input({ useConventionalCommits: true }),
+				changesets({ ignore: ['@mscharley/*'] }),
+				{ foundChangeset: false },
+				[['package.json', { name: '@other/test' }], ['package.json', { name: '@mscharley/test2' }]],
+			),
+		).toMatchObject({
+			affectedPackages: ['@other/test'],
+			message: 'fix: hello, world',
+			updateType: 'patch',
+		});
+	});
+
 	it('will exclude the changeset if only ignored packages are included', () => {
 		expect(
 			generateChangeset(
