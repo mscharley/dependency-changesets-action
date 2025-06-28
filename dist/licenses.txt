@@ -306,7 +306,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: generic-type-guard
-Version: 5.0.5
+Version: 5.1.0
 License: MPL-2.0
 Private: false
 Description: Generic type guards for TypeScript
