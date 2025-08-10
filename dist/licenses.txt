@@ -580,7 +580,7 @@ You may add additional accurate notices of copyright ownership.
 ---
 
 Name: yaml
-Version: 2.8.0
+Version: 2.8.1
 License: ISC
 Private: false
 Description: JavaScript parser and stringifier for YAML
