@@ -53,7 +53,8 @@ export async function run(): Promise<void> {
 		patchString,
 		changesetsConfig,
 		commits,
-		pnpmWorkspaces?.packages ?? rootPackageJson?.workspaces ?? null,
+		pnpmWorkspaces,
+		rootPackageJson,
 		getFromGithub,
 	);
 	if (changeset == null) {
