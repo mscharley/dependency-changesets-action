@@ -57,9 +57,12 @@ export const processPullRequest = async (
 	patchString: string,
 	changesetsConfig: ChangesetsConfiguration,
 	commits: Commit[],
-	workspaces: null | string[],
+	pnpmWorkspace: null | PnpmWorkspace,
+	rootPackageJson: null | NpmPackage,
 	getFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
 ): Promise<{ content: string; outputPath: string } | null> => {
+	const workspaces = pnpmWorkspace?.packages ?? rootPackageJson?.workspaces ?? null;
+
 	if (commits.length !== 1) {
 		debugJson('Refusing to update a PR with more than one commit', commits);
 		return null;
