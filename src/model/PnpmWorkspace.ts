@@ -14,10 +14,10 @@ export interface PnpmCatalogs {
 }
 
 export const isPnpmWorkspace = new IsInterface()
-	.withProperties({
+	.withOptionalProperties({
 		packages: isArray(isString),
-		catalog: isOptional(isPnpmCatalog),
-		catalogs: isOptional(isPnpmNamedCatalogs),
+		catalog: isPnpmCatalog,
+		catalogs: isPnpmNamedCatalogs,
 	})
 	.get();
 export type PnpmWorkspace = GuardedType<typeof isPnpmWorkspace>;
