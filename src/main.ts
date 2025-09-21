@@ -34,15 +34,19 @@ export async function run(): Promise<void> {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
 
-	const getFromGithub = getFile(octokit, owner, repo, ref);
-	const maybeGetFromGithub = getOptionalFile(octokit, owner, repo, ref);
+	const getFromRepository = getFile(octokit, owner, repo, ref);
+
+	const getFromPr = getFile(octokit, owner, repo, ref);
+	const maybeGetFromPr = getOptionalFile(octokit, owner, repo, ref);
+
 	const [commits, patchString, [, changesetsConfig], [, pnpmWorkspaces], [, rootPackageJson]] = await Promise.all([
 		getCommitLog(octokit, owner, repo, pr),
 		getPrPatch(octokit, owner, repo, pr.number),
-		getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`),
-		maybeGetFromGithub(isPnpmWorkspace)(join(input.changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
-		maybeGetFromGithub(isNpmPackage)(join(input.changesetFolder, '../package.json')),
+		getFromPr(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`),
+		maybeGetFromPr(isPnpmWorkspace)(join(input.changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
+		maybeGetFromPr(isNpmPackage)(join(input.changesetFolder, '../package.json')),
 	]);
+
 	debugJson('Changesets configuration', changesetsConfig);
 
 	const changeset = await processPullRequest(
@@ -55,7 +59,8 @@ export async function run(): Promise<void> {
 		commits,
 		pnpmWorkspaces,
 		rootPackageJson,
-		getFromGithub,
+		getFromRepository,
+		getFromPr,
 	);
 	if (changeset == null) {
 		setOutput('created-changeset', false);
