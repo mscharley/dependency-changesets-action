@@ -83,6 +83,67 @@ index 0c63967..4733d7e 100644
 		});
 	});
 
+	it('parses a patch file with updates to a catalog entry', async () => {
+		await expect(
+			await parsePatch(
+				`
+diff --git a/pnpm-workspace.yaml b/pnpm-workspace.yaml
+index 0c63967..4733d7e 100644
+--- a/pnpm-workspace.yaml
++++ b/pnpm-workspace.yaml
+@@ -96,6 +96,6 @@
+catalog:
+  '@types/node': 24.4.0
+-  '@types/jest': 29.0.0
++  '@types/jest': 30.0.0
+
+catalogs:
+  'build-tooling':
+    ts-jest: 29.4.2
+-    typescript: 5.2.0
++    typescript: 5.2.2
+diff --git a/dummy/package.json b/dummy/package.json
+index 0c63967..4733d7e 100644
+--- a/dummy/package.json
++++ b/dummy/package.json
+@@ -96,6 +96,6 @@
+                "stryker-cli": "1.0.2",
+                "ts-jest": "29.1.1",
+                "ts-node": "10.9.1",
+-               "typescript": "5.2.0"
++               "typescript": "5.2.2"
+        }
+ }
+`,
+				'.changeset/hello-world.md',
+				getFiles({
+					'pnpm-workspace.yaml': {
+						catalog: { '@types/node': '24.4.0', '@types/jest': '29.0.0' },
+						catalogs: { 'build-tooling': { 'ts-jest': '29.4.2', 'typescript': '5.2.0' } },
+					},
+				}),
+				getFiles({
+					'pnpm-workspace.yaml': {
+						catalog: { '@types/node': '24.4.0', '@types/jest': '30.0.0' },
+						catalogs: { 'build-tooling': { 'ts-jest': '29.4.2', 'typescript': '5.2.2' } },
+					},
+				}),
+			),
+		).resolves.toEqual({
+			packageFiles: ['dummy/package.json'],
+			catalogs: {
+				catalog: {
+					'@types/jest': '30.0.0',
+				},
+				catalogs: {
+					'build-tooling': {
+						typescript: '5.2.2',
+					},
+				},
+			},
+			foundChangeset: false,
+		});
+	});
 
 	it('detects an existing changeset', async () => {
 		await expect(
