@@ -53,6 +53,7 @@ describe('processPullRequests', () => {
 				null,
 				null,
 				getFiles({}),
+				getFiles({}),
 			),
 		).resolves.toBeNull();
 	});
@@ -69,6 +70,7 @@ describe('processPullRequests', () => {
 				[],
 				null,
 				null,
+				getFiles({}),
 				getFiles({}),
 			),
 		).resolves.toBeNull();
@@ -90,6 +92,7 @@ describe('processPullRequests', () => {
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test' },
 				}),
@@ -121,6 +124,7 @@ fix: update test package
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -144,6 +148,7 @@ fix: update test package
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -167,6 +172,7 @@ fix: update test package
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -198,6 +204,7 @@ fix: update test package
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -221,6 +228,7 @@ fix: update test package
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
 				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: 'false' },
 				}),
