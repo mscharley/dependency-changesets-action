@@ -1,3 +1,5 @@
+import type { TypeGuard } from 'generic-type-guard';
+
 export interface PatchResults {
 	packageFiles: string[];
 	foundChangeset: boolean;
@@ -5,7 +7,12 @@ export interface PatchResults {
 
 const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
 
-export const parsePatch = (patch: string, changesetFile: string): PatchResults => {
+export const parsePatch = async (
+	patch: string,
+	changesetFile: string,
+	getRepoFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
+	getPrFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
+): Promise<PatchResults> => {
 	const changed = [...patch.matchAll(changedFiles)].map((match) => match[1]);
 
 	return {
