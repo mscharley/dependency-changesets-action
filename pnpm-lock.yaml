@@ -40,8 +40,8 @@ importers:
         specifier: 30.1.2
         version: 30.1.2
       '@mscharley/eslint-config':
-        specifier: 4.2.18
-        version: 4.2.18(@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(jest@30.1.3(@types/node@20.19.17))(jiti@2.3.3)(typescript@5.9.2)
+        specifier: 4.2.19
+        version: 4.2.19(@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(jest@30.1.3(@types/node@20.19.17))(jiti@2.3.3)(typescript@5.9.2)
       '@mscharley/prettier-config':
         specifier: 3.1.7
         version: 3.1.7(prettier-plugin-toml@2.0.5(prettier@3.5.3))(prettier@3.5.3)
@@ -1024,8 +1024,8 @@ packages:
   '@kamilkisiela/fast-url-parser@1.1.4':
     resolution: {integrity: sha512-gbkePEBupNydxCelHCESvFSFM8XPh1Zs/OAVRW/rKpEqPAl5PbOM90Si8mv9bvnR53uPD2s/FiRxdvSejpRJew==}
 
-  '@mscharley/eslint-config@4.2.18':
-    resolution: {integrity: sha512-zBtJ1Ha48VAzpH12ewWQ/JaYdr0UhtM49dqJ3ejWmMTgcpTfnJ0Z9QopX8hBJCivtFARZRjS4p6hhonFnXZw9g==}
+  '@mscharley/eslint-config@4.2.19':
+    resolution: {integrity: sha512-X67apYfypF8hi4kSk0REQHTGR5F7oPjGvouMwCg7pQX6+AABBydBJu0YJ3RtNIF4EN4ri9chfrzxE/D4gWW2Pw==}
 
   '@mscharley/prettier-config@3.1.7':
     resolution: {integrity: sha512-CbzC6qs6NrN+eIt5tRWSbDWsYD4SxBfu8NxScAMSxveVEMnZ0VDWUVCGIyRRwgSZX2gANedd/uIhgUjngUEvlg==}
@@ -5190,7 +5190,7 @@ snapshots:
 
   '@kamilkisiela/fast-url-parser@1.1.4': {}
 
-  '@mscharley/eslint-config@4.2.18(@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(jest@30.1.3(@types/node@20.19.17))(jiti@2.3.3)(typescript@5.9.2)':
+  '@mscharley/eslint-config@4.2.19(@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.3.3))(typescript@5.9.2))(jest@30.1.3(@types/node@20.19.17))(jiti@2.3.3)(typescript@5.9.2)':
     dependencies:
       '@eslint/js': 9.36.0
       '@stylistic/eslint-plugin': 5.4.0(eslint@9.36.0(jiti@2.3.3))
