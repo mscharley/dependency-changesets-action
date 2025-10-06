@@ -19,6 +19,10 @@ describe('parseConventionalCommitMessage', () => {
 		it('will return patch for fixes', () => {
 			expect(parseConventionalCommitMessage('fix: update foo')).toBe('patch');
 		});
+
+		it('will return patch for scopes', () => {
+			expect(parseConventionalCommitMessage('fix(deps-dev): update foo')).toBe('patch');
+		});
 	});
 
 	describe('minor', () => {
