@@ -13,6 +13,11 @@ describe('parseConventionalCommitMessage', () => {
 		it('will return no commit level for other types of commits', () => {
 			expect(parseConventionalCommitMessage('ci: update foo')).toBe('none');
 		});
+
+		it('will not allow scopes with whitespace', () => {
+			expect(parseConventionalCommitMessage('fix(deps dev): update foo')).toBe('none');
+			expect(parseConventionalCommitMessage('fix(deps\tdev): update foo')).toBe('none');
+		});
 	});
 
 	describe('patch', () => {

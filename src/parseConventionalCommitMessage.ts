@@ -1,6 +1,6 @@
 import { debug } from '@actions/core';
 
-const conventionalCommit = /^(\w+)(?:\(([^)]+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
+const conventionalCommit = /^(\w+)(?:\(([^)\s]+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
 
 /**
  * Parses a commit message into a release type
