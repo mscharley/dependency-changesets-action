@@ -44067,7 +44067,7 @@ minimatch.Minimatch = Minimatch;
 minimatch.escape = escape;
 minimatch.unescape = unescape;
 
-const conventionalCommit = /^(\w+)(?:\((\w+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
+const conventionalCommit = /^(\w+)(?:\(([^)]+)\))?(!?):\s*(.*)(?:\n\n(.*))?$/u;
 /**
  * Parses a commit message into a release type
  */
