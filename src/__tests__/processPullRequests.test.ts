@@ -51,6 +51,8 @@ describe('processPullRequests', () => {
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({}), partial<Commit>({})],
 				null,
+				null,
+				getFiles({}),
 				getFiles({}),
 			),
 		).resolves.toBeNull();
@@ -67,6 +69,8 @@ describe('processPullRequests', () => {
 				partial<ChangesetsConfiguration>({}),
 				[],
 				null,
+				null,
+				getFiles({}),
 				getFiles({}),
 			),
 		).resolves.toBeNull();
@@ -87,6 +91,8 @@ describe('processPullRequests', () => {
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test' },
 				}),
@@ -117,6 +123,8 @@ fix: update test package
 				partial<ChangesetsConfiguration>({ privatePackages: false }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -139,6 +147,8 @@ fix: update test package
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -161,6 +171,8 @@ fix: update test package
 				partial<ChangesetsConfiguration>({ privatePackages: { tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -191,6 +203,8 @@ fix: update test package
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false, tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
@@ -213,6 +227,8 @@ fix: update test package
 				partial<ChangesetsConfiguration>({ privatePackages: false }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
 				null,
+				null,
+				getFiles({}),
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: 'false' },
 				}),
