@@ -48,7 +48,7 @@
 		"@mscharley/eslint-config": "4.2.19",
 		"@mscharley/prettier-config": "3.1.7",
 		"@rollup/plugin-commonjs": "28.0.6",
-		"@rollup/plugin-node-resolve": "16.0.2",
+		"@rollup/plugin-node-resolve": "16.0.3",
 		"@rollup/plugin-typescript": "12.1.4",
 		"@swc/jest": "0.2.39",
 		"@types/jest": "30.0.0",
