@@ -57,9 +57,13 @@ export const processPullRequest = async (
 	patchString: string,
 	changesetsConfig: ChangesetsConfiguration,
 	commits: Commit[],
-	workspaces: null | string[],
-	getFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
+	pnpmWorkspace: null | PnpmWorkspace,
+	rootPackageJson: null | NpmPackage,
+	getRepoFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
+	getPrFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
 ): Promise<{ content: string; outputPath: string } | null> => {
+	const workspaces = pnpmWorkspace?.packages ?? rootPackageJson?.workspaces ?? null;
+
 	if (commits.length !== 1) {
 		debugJson('Refusing to update a PR with more than one commit', commits);
 		return null;
@@ -71,8 +75,8 @@ export const processPullRequest = async (
 	info(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
 
 	debug('Fetching patch');
-	const patch = parsePatch(patchString, outputPath);
-	const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(isNpmPackage)));
+	const patch = await parsePatch(patchString, outputPath, getRepoFile, getPrFile);
+	const packageFiles = await Promise.allSettled(patch.packageFiles.map(getPrFile(isNpmPackage)));
 	const errs = packageFiles.filter((v): v is PromiseRejectedResult => v.status === 'rejected');
 	if (errs.length > 0) {
 		throw new AggregateError(errs.map((v) => v.reason as Error));
