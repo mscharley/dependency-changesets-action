@@ -5,7 +5,7 @@
 		{
 			"matchPackageNames": ["@types/node", "node"],
 			"groupName": "node",
-			"allowedVersions": "^20.9.0",
+			"allowedVersions": "^24.11.0",
 			"major": {
 				"enabled": true,
 				"semanticCommitType": "fix"
