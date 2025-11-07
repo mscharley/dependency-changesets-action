@@ -21,7 +21,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       minimatch:
-        specifier: ^10.0.3
+        specifier: ^10.1.1
         version: 10.1.1
       yaml:
         specifier: ^2.8.1
