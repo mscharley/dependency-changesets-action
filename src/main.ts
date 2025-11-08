@@ -1,18 +1,12 @@
-import { debug, info, setOutput } from '@actions/core';
-import { getFile, getOptionalFile } from './io/github/getFile.js';
-import { CreateCommitDocument } from './generated/graphql.js';
-import type { CreateCommitMutationVariables } from './generated/graphql.js';
+import { info, setOutput } from '@actions/core';
+import { calculateCatalogUpdates } from './pnpm/calculateCatalogUpdates.js';
 import { debugJson } from './io/debugJson.js';
+import { fetchRequiredGithubFiles } from './io/fetchRequiredGithubFiles.js';
 import { generateCommitMessage } from './generateCommitMessage.js';
-import { getCommitLog } from './io/github/getCommitLog.js';
 import { getEvent } from './io/getEvent.js';
-import { getPrPatch } from './io/github/getPrPatch.js';
-import { isChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
-import { isNpmPackage } from './model/NpmPackage.js';
-import { isPnpmWorkspace } from './model/PnpmWorkspace.js';
-import { join } from 'node:path';
 import { parseInput } from './io/parseInput.js';
 import { processPullRequest } from './processPullRequest.js';
+import { publishChangeset } from './io/publishChangeset.js';
 
 /**
  * The main function for the action.
@@ -29,23 +23,23 @@ export async function run(): Promise<void> {
 
 	const owner = pr.base.repo.owner?.login ?? pr.base.repo.organization;
 	const repo = pr.base.repo.name;
-	const ref = pr.head.ref;
 	if (owner == null) {
 		throw new Error('Unable to determine the owner of this repo.');
 	}
 
-	const getFromGithub = getFile(octokit, owner, repo, ref);
-	const maybeGetFromGithub = getOptionalFile(octokit, owner, repo, ref);
-	const [commits, patchString, [, changesetsConfig], [, pnpmWorkspaces], [, rootPackageJson]] = await Promise.all([
-		getCommitLog(octokit, owner, repo, pr),
-		getPrPatch(octokit, owner, repo, pr.number),
-		getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`),
-		maybeGetFromGithub(isPnpmWorkspace)(join(input.changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
-		maybeGetFromGithub(isNpmPackage)(join(input.changesetFolder, '../package.json')),
-	]);
+	const {
+		getFromGithub,
+		commits,
+		patchString,
+		changesetsConfig,
+		pnpmWorkspace,
+		pnpmLock,
+		rootPackageJson,
+	} = await fetchRequiredGithubFiles(octokit, owner, repo, pr, input.changesetFolder);
 	debugJson('Changesets configuration', changesetsConfig);
 
-	const changeset = await processPullRequest(
+	const pnpmCatalogs = calculateCatalogUpdates(pnpmWorkspace, pnpmLock);
+	const upload = await processPullRequest(
 		input,
 		owner,
 		repo,
@@ -53,61 +47,17 @@ export async function run(): Promise<void> {
 		patchString,
 		changesetsConfig,
 		commits,
-		pnpmWorkspaces?.packages ?? rootPackageJson?.workspaces ?? null,
 		getFromGithub,
+		pnpmCatalogs,
+		pnpmWorkspace?.packages ?? rootPackageJson?.workspaces,
 	);
-	if (changeset == null) {
+	if (upload == null) {
 		setOutput('created-changeset', false);
 		return;
 	}
 
 	const commitMessage = generateCommitMessage(input);
-	const { content, outputPath } = changeset;
-	if (input.signCommits) {
-		debug('Pushing changeset to Github');
-		if (input.author != null) {
-			throw new Error('Custom author information is incompatible with signing commits.');
-		}
-		await octokit.graphql(CreateCommitDocument.toString(), {
-			commit: {
-				clientMutationId: 'mscharley/dependency-changesets-action',
-				branch: {
-					repositoryNameWithOwner: `${owner}/${repo}`,
-					branchName: pr.head.ref,
-				},
-				message: {
-					headline: commitMessage,
-				},
-				expectedHeadOid: pr.head.sha,
-				fileChanges: {
-					additions: [
-						{
-							path: outputPath,
-							contents: Buffer.from(content, 'utf8').toString('base64'),
-						},
-					],
-				},
-			},
-		} satisfies CreateCommitMutationVariables);
-	} else {
-		debugJson('Pushing changeset to Github', { owner, repo, ref, outputPath });
-		try {
-			await octokit.rest.repos.createOrUpdateFileContents({
-				owner,
-				repo,
-				branch: ref,
-				path: outputPath,
-				message: commitMessage,
-				content: Buffer.from(content, 'utf8').toString('base64'),
-				author: input.author,
-			});
-		} catch (e) {
-			if (e instanceof Error && e.message.includes(`"sha" wasn't supplied`)) {
-				throw new Error('Attempted to update a changeset instead of creating a new one - this is probably a bug.', { cause: e });
-			}
-			throw e;
-		}
-	}
+	await publishChangeset(octokit, owner, repo, pr.head, upload, commitMessage, input.author, input.signCommits);
 
 	// Set outputs for other workflow steps to use
 	setOutput('created-changeset', true);

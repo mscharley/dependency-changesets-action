@@ -7,7 +7,7 @@ import type { TypeGuard } from 'generic-type-guard';
 export const getOptionalFile
 	= (octokit: OctokitClient, owner: string, repo: string, ref: string) =>
 		<T>(guard: TypeGuard<T>) =>
-			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T | null]> => {
+			async (path: string, dataType?: 'json' | 'text' | 'yaml'): Promise<[string, T | null]> => {
 				debug(`Fetching file from ${owner}/${repo}#${ref}:${path}`);
 				const response = await octokit.rest.repos.getContent({
 					owner,
@@ -32,7 +32,7 @@ export const getOptionalFile
 					throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
 				}
 				const dt = dataType ?? 'json';
-				const data: unknown = dt === 'json' ? JSON.parse(response.data) : parseYaml(response.data);
+				const data: unknown = dt === 'json' ? JSON.parse(response.data) : dt === 'yaml' ? parseYaml(response.data) : response.data;
 				assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
 
 				return [path, data];
@@ -41,7 +41,7 @@ export const getOptionalFile
 export const getFile
 	= (octokit: OctokitClient, owner: string, repo: string, ref: string) =>
 		<T>(guard: TypeGuard<T>) =>
-			async (path: string, dataType?: 'json' | 'yaml'): Promise<[string, T]> => {
+			async (path: string, dataType?: 'json' | 'text' | 'yaml'): Promise<[string, T]> => {
 				const [p, v] = await getOptionalFile(octokit, owner, repo, ref)(guard)(path, dataType);
 
 				if (v == null) {

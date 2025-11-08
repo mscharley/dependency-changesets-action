@@ -21,6 +21,7 @@ index 03e8948..8560b41 100644
          uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3
 `,
 				'.changeset/hello-world.md',
+				{},
 			),
 		).toEqual({
 			foundChangeset: false,
@@ -58,6 +59,7 @@ index 0c63967..4733d7e 100644
  }
 `,
 				'.changeset/hello-world.md',
+				{},
 			),
 		).toEqual({
 			foundChangeset: false,
@@ -76,10 +78,41 @@ index 0c63967..4733d7e 100644
 @@ -96,6 +96,6 @@
 `,
 				'.changeset/hello-world.md',
+				{},
 			),
 		).toEqual({
 			foundChangeset: true,
 			packageFiles: [],
+		});
+	});
+
+	it('detects changes in catalogs', () => {
+		expect(parsePatch(
+			`
+diff --git a/pnpm-workspace.yaml b/pnpm-workspace.yaml
+index 4541010..89dd655 100644
+--- a/pnpm-workspace.yaml
++++ b/pnpm-workspace.yaml
+@@ -36,8 +36,8 @@ catalogs:
+     "@eslint/compat": 1.3.2
+     "@eslint/js": 9.35.0
+ 
+-    "typescript-eslint": 8.43.0
+-    "@typescript-eslint/parser": 8.43.0
++    "typescript-eslint": 8.44.0
++    "@typescript-eslint/parser": 8.44.0
+     "eslint-import-resolver-typescript": 4.4.4
+ 
+     "eslint-config-prettier": 10.1.8
+`,
+			'.changeset/hello-world.md',
+			{
+				'typescript-eslint@8.44.0': [{ packageFile: 'package.json' }],
+				'@typescript-eslint/parser@8.44.0': [{ packageFile: 'package.json' }],
+			},
+		)).toEqual({
+			foundChangeset: false,
+			packageFiles: ['package.json'],
 		});
 	});
 });

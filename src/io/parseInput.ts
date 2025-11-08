@@ -6,12 +6,14 @@ import type { OctokitClient } from '../model/Github.js';
 
 const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
 
+export interface Author {
+	name: string;
+	email: string;
+	dco: boolean;
+}
+
 export interface ActionInput {
-	author?: {
-		name: string;
-		email: string;
-		dco: boolean;
-	};
+	author?: Author;
 	changesetFolder: string;
 	commitMessage: string;
 	octokit: OctokitClient;
