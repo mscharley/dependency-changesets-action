@@ -6,7 +6,7 @@ import { debugJson } from './io/debugJson.js';
 import { minimatch } from 'minimatch';
 import type { NpmPackage } from './model/NpmPackage.js';
 import { parseConventionalCommitMessage } from './parseConventionalCommitMessage.js';
-import type { PatchResults } from './io/github/parsePatch.js';
+import type { PatchResults } from './parsePatch.js';
 
 export interface Changeset {
 	affectedPackages: string[];

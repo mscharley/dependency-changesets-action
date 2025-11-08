@@ -50,8 +50,9 @@ describe('processPullRequests', () => {
 				'',
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({}), partial<Commit>({})],
-				null,
 				getFiles({}),
+				{},
+				undefined,
 			),
 		).resolves.toBeNull();
 	});
@@ -66,8 +67,9 @@ describe('processPullRequests', () => {
 				'',
 				partial<ChangesetsConfiguration>({}),
 				[],
-				null,
 				getFiles({}),
+				{},
+				undefined,
 			),
 		).resolves.toBeNull();
 	});
@@ -86,10 +88,11 @@ describe('processPullRequests', () => {
 				validDiff,
 				partial<ChangesetsConfiguration>({}),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test' },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toMatchObject({
 			content: `---
@@ -100,6 +103,29 @@ fix: update test package
 `,
 			outputPath: '.changeset/dependencies-GH-10.md',
 		});
+	});
+
+	it('returns early if there is already a changeset created', async () => {
+		await expect(
+			processPullRequest(
+				partial<ActionInput>({ changesetFolder: '.changeset' }),
+				owner,
+				repo,
+				partial<PullRequest>({
+					number: 10,
+					title: 'fix: update test package',
+					head: { ref: 'update-test' },
+				}),
+				`${validDiff}\n+++ b/.changeset/dependencies-GH-10.md\n`,
+				partial<ChangesetsConfiguration>({}),
+				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
+				getFiles({
+					'package.json': { name: '@mscharley/test' },
+				}),
+				{},
+				undefined,
+			),
+		).resolves.toBeNull();
 	});
 
 	it('will exclude a package if it is marked private and private packages are disabled in changesets', async () => {
@@ -116,10 +142,11 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: false }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toBeNull();
 	});
@@ -138,10 +165,11 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toBeNull();
 	});
@@ -160,10 +188,11 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toMatchObject({
 			content: `---
@@ -190,10 +219,11 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: { version: false, tag: false } }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: true },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toBeNull();
 	});
@@ -212,10 +242,11 @@ fix: update test package
 				validDiff,
 				partial<ChangesetsConfiguration>({ privatePackages: false }),
 				[partial<Commit>({ commit: { message: 'fix: update test package' } })],
-				null,
 				getFiles({
 					'package.json': { name: '@mscharley/test', private: 'false' },
 				}),
+				{},
+				undefined,
 			),
 		).resolves.toMatchObject({
 			content: `---

@@ -7,6 +7,7 @@ export const isNpmPackage = new IsInterface()
 		name: isString,
 		workspaces: isArray(isString),
 		private: isUnion(isBoolean, isSingletonStringUnion('true', 'false')),
+		packageManager: isString,
 	})
 	.get();
 export type NpmPackage = GuardedType<typeof isNpmPackage>;

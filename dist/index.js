@@ -28,8 +28,8 @@ import require$$0$9 from 'diagnostics_channel';
 import require$$2$3 from 'child_process';
 import require$$6$1 from 'timers';
 import require$$0$a from 'process';
-import { readFile } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -27282,6 +27282,40 @@ function requireCore () {
 
 var coreExports = requireCore();
 
+/**
+ * Returns a mapping from package identifiers from all catalogs to a list of packages that depend on that catalog entry.
+ */
+const calculateCatalogUpdates = (workspace, lock) => {
+    if (workspace == null || lock == null) {
+        return {};
+    }
+    const results = {};
+    Object.entries(workspace.catalogs ?? {})
+        .concat([['', workspace.catalog ?? {}]])
+        .forEach(([catalogName, catalog]) => {
+        const catalogId = `catalog:${catalogName}`;
+        Object.entries(catalog).forEach(([name, ver]) => {
+            const packageId = `${name}@${ver}`;
+            results[packageId] ??= [];
+            Object.entries(lock.importers ?? {}).forEach(([path, { dependencies, peerDependencies, devDependencies, optionalDependencies },]) => {
+                const packageFile = path === '.' ? 'package.json' : `${path}/package.json`;
+                if (dependencies?.[name]?.specifier === catalogId
+                    || peerDependencies?.[name]?.specifier === catalogId
+                    || devDependencies?.[name]?.specifier === catalogId
+                    || optionalDependencies?.[name]?.specifier === catalogId) {
+                    results[packageId]?.push({ packageFile });
+                }
+            });
+        });
+    });
+    return results;
+};
+
+const DEBUG_INDENT = 2;
+const debugJson = (message, obj) => {
+    coreExports.debug(`${message}: ${JSON.stringify(obj, undefined, DEBUG_INDENT)}`);
+};
+
 // dist/utils.js
 var __extends = /* @__PURE__ */ function() {
   var extendStatics = function(d, b) {
@@ -36202,7 +36236,7 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
         throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
     }
     const dt = dataType ?? 'json';
-    const data = dt === 'json' ? JSON.parse(response.data) : distExports.parse(response.data);
+    const data = dt === 'json' ? JSON.parse(response.data) : dt === 'yaml' ? distExports.parse(response.data) : response.data;
     assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
     return [path, data];
 };
@@ -36214,57 +36248,9 @@ const getFile = (octokit, owner, repo, ref) => (guard) => async (path, dataType)
     return [p, v];
 };
 
-class TypedDocumentString extends String {
-    __apiType;
-    value;
-    __meta__;
-    constructor(value, __meta__) {
-        super(value);
-        this.value = value;
-        this.__meta__ = __meta__;
-    }
-    toString() {
-        return this.value;
-    }
-}
-const CreateCommitDocument = new TypedDocumentString(`
-    mutation createCommit($commit: CreateCommitOnBranchInput!) {
-  createCommitOnBranch(input: $commit) {
-    commit {
-      commitUrl
-    }
-  }
-}
-    `);
-
-const DEBUG_INDENT = 2;
-const debugJson = (message, obj) => {
-    coreExports.debug(`${message}: ${JSON.stringify(obj, undefined, DEBUG_INDENT)}`);
-};
-
-const generateCommitMessage = (input) => {
-    if (input.author?.dco === true) {
-        return `${input.commitMessage}\n\nSigned-off-by: ${input.author.name} <${input.author.email}>`;
-    }
-    else {
-        return input.commitMessage;
-    }
-};
-
 const getCommitLog = async (octokit, owner, repo, pr) => {
     const commits = await octokit.rest.pulls.listCommits({ owner, repo, pull_number: pr.number });
     return commits.data;
-};
-
-const getEvent = async () => {
-    if (process.env.GITHUB_EVENT_PATH == null) {
-        throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?');
-    }
-    const event = JSON.parse((await readFile(process.env.GITHUB_EVENT_PATH)).toString('utf-8'));
-    if (!(typeof event === 'object' && event != null && 'pull_request' in event)) {
-        throw new Error('Event doesn\'t have a pull_request available.');
-    }
-    return event;
 };
 
 const getPrPatch = async (octokit, owner, repo, pullNumber) => {
@@ -36299,15 +36285,88 @@ const isNpmPackage = new IsInterface()
     name: isString,
     workspaces: isArray(isString),
     private: isUnion(isBoolean, isSingletonStringUnion('true', 'false')),
+    packageManager: isString,
 })
     .get();
 
 /* eslint-disable @typescript-eslint/no-type-alias */
+// https://github.com/pnpm/spec/tree/master/lockfile
+const isDependencyDefinition = new IsInterface().withProperties({ specifier: isString }).get();
+const isPackageList = new IsInterface()
+    .withStringIndexSignature(isDependencyDefinition)
+    .get();
+const isPnpmLock = new IsInterface().withOptionalProperties({
+    lockfileVersion: isString,
+    importers: new IsInterface()
+        .withStringIndexSignature(new IsInterface().withOptionalProperties({
+        dependencies: isPackageList,
+        devDependencies: isPackageList,
+        peerDependencies: isPackageList,
+        optionalDependencies: isPackageList,
+    }).get())
+        .get(),
+}).get();
+
+/* eslint-disable @typescript-eslint/no-type-alias */
+const isPnpmCatalog = new IsInterface().withStringIndexSignature(isString).get();
 const isPnpmWorkspace = new IsInterface()
     .withProperties({
     packages: isArray(isString),
 })
+    .withOptionalProperties({
+    catalog: isPnpmCatalog,
+    catalogs: new IsInterface().withStringIndexSignature(isPnpmCatalog).get(),
+})
     .get();
+
+const fetchRequiredGithubFiles = async (octokit, owner, repo, pr, changesetFolder) => {
+    const getFromGithub = getFile(octokit, owner, repo, pr.head.ref);
+    const maybeGetFromGithub = getOptionalFile(octokit, owner, repo, pr.head.ref);
+    const [commits, patchString, [, changesetsConfig], [, pnpmWorkspace], [, pnpmLock], [, rootPackageJson],] = await Promise.all([
+        getCommitLog(octokit, owner, repo, pr),
+        getPrPatch(octokit, owner, repo, pr.number),
+        getFromGithub(isChangesetsConfiguration)(`${changesetFolder}/config.json`),
+        maybeGetFromGithub(isPnpmWorkspace)(join(changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
+        maybeGetFromGithub(isPnpmLock)(join(changesetFolder, '../pnpm-lock.yaml'), 'yaml'),
+        maybeGetFromGithub(isNpmPackage)(join(changesetFolder, '../package.json')),
+    ]);
+    const validPnpmLock = pnpmLock == null || pnpmLock.lockfileVersion === '9.0';
+    if (!validPnpmLock && (pnpmWorkspace?.catalog != null || pnpmWorkspace?.catalogs != null)) {
+        coreExports.warning('It looks like this repository is using catalogs but catalog updates are only supported in repositories using PNPM version >= 9.0.0 with a lockfile');
+        pnpmWorkspace.catalogs = undefined;
+        pnpmWorkspace.catalog = undefined;
+    }
+    return {
+        getFromGithub,
+        maybeGetFromGithub,
+        commits,
+        patchString,
+        changesetsConfig,
+        pnpmWorkspace,
+        pnpmLock,
+        rootPackageJson,
+    };
+};
+
+const generateCommitMessage = (input) => {
+    if (input.author?.dco === true) {
+        return `${input.commitMessage}\n\nSigned-off-by: ${input.author.name} <${input.author.email}>`;
+    }
+    else {
+        return input.commitMessage;
+    }
+};
+
+const getEvent = async () => {
+    if (process.env.GITHUB_EVENT_PATH == null) {
+        throw new Error('GITHUB_EVENT_PATH is not set, is this running in Github Actions?');
+    }
+    const event = JSON.parse((await readFile(process.env.GITHUB_EVENT_PATH)).toString('utf-8'));
+    if (!(typeof event === 'object' && event != null && 'pull_request' in event)) {
+        throw new Error('Event doesn\'t have a pull_request available.');
+    }
+    return event;
+};
 
 var light$1 = {exports: {}};
 
@@ -44171,12 +44230,48 @@ const generateChangeset = (pr, { commit }, input, changesets, patch, packageFile
     };
 };
 
-const changedFiles = /^\+\+\+ b\/(.*)$/gmu;
-const parsePatch = (patch, changesetFile) => {
-    const changed = [...patch.matchAll(changedFiles)].map((match) => match[1]);
+var parseDiff$1;
+var hasRequiredParseDiff;
+
+function requireParseDiff () {
+	if (hasRequiredParseDiff) return parseDiff$1;
+	hasRequiredParseDiff = 1;
+function _typeof(obj){"@babel/helpers - typeof";return _typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(obj){return typeof obj}:function(obj){return obj&&"function"==typeof Symbol&&obj.constructor===Symbol&&obj!==Symbol.prototype?"symbol":typeof obj},_typeof(obj)}function _createForOfIteratorHelper(o,allowArrayLike){var it=typeof Symbol!=="undefined"&&o[Symbol.iterator]||o["@@iterator"];if(!it){if(Array.isArray(o)||(it=_unsupportedIterableToArray(o))||allowArrayLike){if(it)o=it;var i=0;var F=function F(){};return {s:F,n:function n(){if(i>=o.length)return {done:true};return {done:false,value:o[i++]}},e:function e(_e2){throw _e2},f:F}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var normalCompletion=true,didErr=false,err;return {s:function s(){it=it.call(o);},n:function n(){var step=it.next();normalCompletion=step.done;return step},e:function e(_e3){didErr=true;err=_e3;},f:function f(){try{if(!normalCompletion&&it["return"]!=null)it["return"]();}finally{if(didErr)throw err}}}}function _defineProperty(obj,key,value){key=_toPropertyKey(key);if(key in obj){Object.defineProperty(obj,key,{value:value,enumerable:true,configurable:true,writable:true});}else {obj[key]=value;}return obj}function _toPropertyKey(arg){var key=_toPrimitive(arg,"string");return _typeof(key)==="symbol"?key:String(key)}function _toPrimitive(input,hint){if(_typeof(input)!=="object"||input===null)return input;var prim=input[Symbol.toPrimitive];if(prim!==undefined){var res=prim.call(input,hint);if(_typeof(res)!=="object")return res;throw new TypeError("@@toPrimitive must return a primitive value.")}return (hint==="string"?String:Number)(input)}function _slicedToArray(arr,i){return _arrayWithHoles(arr)||_iterableToArrayLimit(arr,i)||_unsupportedIterableToArray(arr,i)||_nonIterableRest()}function _nonIterableRest(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}function _unsupportedIterableToArray(o,minLen){if(!o)return;if(typeof o==="string")return _arrayLikeToArray(o,minLen);var n=Object.prototype.toString.call(o).slice(8,-1);if(n==="Object"&&o.constructor)n=o.constructor.name;if(n==="Map"||n==="Set")return Array.from(o);if(n==="Arguments"||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))return _arrayLikeToArray(o,minLen)}function _arrayLikeToArray(arr,len){if(len==null||len>arr.length)len=arr.length;for(var i=0,arr2=new Array(len);i<len;i++){arr2[i]=arr[i];}return arr2}function _iterableToArrayLimit(arr,i){var _i=null==arr?null:"undefined"!=typeof Symbol&&arr[Symbol.iterator]||arr["@@iterator"];if(null!=_i){var _s,_e,_x,_r,_arr=[],_n=true,_d=false;try{if(_x=(_i=_i.call(arr)).next,0===i){if(Object(_i)!==_i)return;_n=!1;}else for(;!(_n=(_s=_x.call(_i)).done)&&(_arr.push(_s.value),_arr.length!==i);_n=!0){;}}catch(err){_d=true,_e=err;}finally{try{if(!_n&&null!=_i["return"]&&(_r=_i["return"](),Object(_r)!==_r))return}finally{if(_d)throw _e}}return _arr}}function _arrayWithHoles(arr){if(Array.isArray(arr))return arr}parseDiff$1=function(input){if(!input)return [];if(typeof input!=="string"||input.match(/^\s+$/))return [];var lines=input.split("\n");if(lines.length===0)return [];var files=[];var currentFile=null;var currentChunk=null;var deletedLineCounter=0;var addedLineCounter=0;var currentFileChanges=null;var normal=function normal(line){var _currentChunk;(_currentChunk=currentChunk)===null||_currentChunk===void 0?void 0:_currentChunk.changes.push({type:"normal",normal:true,ln1:deletedLineCounter++,ln2:addedLineCounter++,content:line});currentFileChanges.oldLines--;currentFileChanges.newLines--;};var start=function start(line){var _parseFiles;var _ref=(_parseFiles=parseFiles(line))!==null&&_parseFiles!==void 0?_parseFiles:[],_ref2=_slicedToArray(_ref,2),fromFileName=_ref2[0],toFileName=_ref2[1];currentFile={chunks:[],deletions:0,additions:0,from:fromFileName,to:toFileName};files.push(currentFile);};var restart=function restart(){if(!currentFile||currentFile.chunks.length)start();};var newFile=function newFile(_,match){restart();currentFile["new"]=true;currentFile.newMode=match[1];currentFile.from="/dev/null";};var deletedFile=function deletedFile(_,match){restart();currentFile.deleted=true;currentFile.oldMode=match[1];currentFile.to="/dev/null";};var oldMode=function oldMode(_,match){restart();currentFile.oldMode=match[1];};var newMode=function newMode(_,match){restart();currentFile.newMode=match[1];};var index=function index(line,match){restart();currentFile.index=line.split(" ").slice(1);if(match[1]){currentFile.oldMode=currentFile.newMode=match[1].trim();}};var fromFile=function fromFile(line){restart();currentFile.from=parseOldOrNewFile(line);};var toFile=function toFile(line){restart();currentFile.to=parseOldOrNewFile(line);};var toNumOfLines=function toNumOfLines(number){return +(number||1)};var chunk=function chunk(line,match){if(!currentFile){start(line);}var _match$slice=match.slice(1),_match$slice2=_slicedToArray(_match$slice,4),oldStart=_match$slice2[0],oldNumLines=_match$slice2[1],newStart=_match$slice2[2],newNumLines=_match$slice2[3];deletedLineCounter=+oldStart;addedLineCounter=+newStart;currentChunk={content:line,changes:[],oldStart:+oldStart,oldLines:toNumOfLines(oldNumLines),newStart:+newStart,newLines:toNumOfLines(newNumLines)};currentFileChanges={oldLines:toNumOfLines(oldNumLines),newLines:toNumOfLines(newNumLines)};currentFile.chunks.push(currentChunk);};var del=function del(line){if(!currentChunk)return;currentChunk.changes.push({type:"del",del:true,ln:deletedLineCounter++,content:line});currentFile.deletions++;currentFileChanges.oldLines--;};var add=function add(line){if(!currentChunk)return;currentChunk.changes.push({type:"add",add:true,ln:addedLineCounter++,content:line});currentFile.additions++;currentFileChanges.newLines--;};var eof=function eof(line){var _currentChunk$changes3;if(!currentChunk)return;var _currentChunk$changes=currentChunk.changes.slice(-1),_currentChunk$changes2=_slicedToArray(_currentChunk$changes,1),mostRecentChange=_currentChunk$changes2[0];currentChunk.changes.push((_currentChunk$changes3={type:mostRecentChange.type},_defineProperty(_currentChunk$changes3,mostRecentChange.type,true),_defineProperty(_currentChunk$changes3,"ln1",mostRecentChange.ln1),_defineProperty(_currentChunk$changes3,"ln2",mostRecentChange.ln2),_defineProperty(_currentChunk$changes3,"ln",mostRecentChange.ln),_defineProperty(_currentChunk$changes3,"content",line),_currentChunk$changes3));};var schemaHeaders=[[/^diff\s/,start],[/^new file mode (\d+)$/,newFile],[/^deleted file mode (\d+)$/,deletedFile],[/^old mode (\d+)$/,oldMode],[/^new mode (\d+)$/,newMode],[/^index\s[\da-zA-Z]+\.\.[\da-zA-Z]+(\s(\d+))?$/,index],[/^---\s/,fromFile],[/^\+\+\+\s/,toFile],[/^@@\s+-(\d+),?(\d+)?\s+\+(\d+),?(\d+)?\s@@/,chunk],[/^\\ No newline at end of file$/,eof]];var schemaContent=[[/^\\ No newline at end of file$/,eof],[/^-/,del],[/^\+/,add],[/^\s+/,normal]];var parseContentLine=function parseContentLine(line){for(var _i2=0,_schemaContent=schemaContent;_i2<_schemaContent.length;_i2++){var _schemaContent$_i=_slicedToArray(_schemaContent[_i2],2),pattern=_schemaContent$_i[0],handler=_schemaContent$_i[1];var match=line.match(pattern);if(match){handler(line,match);break}}if(currentFileChanges.oldLines===0&&currentFileChanges.newLines===0){currentFileChanges=null;}};var parseHeaderLine=function parseHeaderLine(line){for(var _i3=0,_schemaHeaders=schemaHeaders;_i3<_schemaHeaders.length;_i3++){var _schemaHeaders$_i=_slicedToArray(_schemaHeaders[_i3],2),pattern=_schemaHeaders$_i[0],handler=_schemaHeaders$_i[1];var match=line.match(pattern);if(match){handler(line,match);break}}};var parseLine=function parseLine(line){if(currentFileChanges){parseContentLine(line);}else {parseHeaderLine(line);}return};var _iterator=_createForOfIteratorHelper(lines),_step;try{for(_iterator.s();!(_step=_iterator.n()).done;){var line=_step.value;parseLine(line);}}catch(err){_iterator.e(err);}finally{_iterator.f();}return files};var fileNameDiffRegex=/(a|i|w|c|o|1|2)\/.*(?=["']? ["']?(b|i|w|c|o|1|2)\/)|(b|i|w|c|o|1|2)\/.*$/g;var gitFileHeaderRegex=/^(a|b|i|w|c|o|1|2)\//;var parseFiles=function parseFiles(line){var fileNames=line===null||line===void 0?void 0:line.match(fileNameDiffRegex);return fileNames===null||fileNames===void 0?void 0:fileNames.map(function(fileName){return fileName.replace(gitFileHeaderRegex,"").replace(/("|')$/,"")})};var qoutedFileNameRegex=/^\\?['"]|\\?['"]$/g;var parseOldOrNewFile=function parseOldOrNewFile(line){var fileName=leftTrimChars(line,"-+").trim();fileName=removeTimeStamp(fileName);return fileName.replace(qoutedFileNameRegex,"").replace(gitFileHeaderRegex,"")};var leftTrimChars=function leftTrimChars(string,trimmingChars){string=makeString(string);var trimmingString=formTrimmingString(trimmingChars);return string.replace(new RegExp("^".concat(trimmingString,"+")),"")};var timeStampRegex=/\t.*|\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d(.\d+)?\s(\+|-)\d\d\d\d/;var removeTimeStamp=function removeTimeStamp(string){var timeStamp=timeStampRegex.exec(string);if(timeStamp){string=string.substring(0,timeStamp.index).trim();}return string};var formTrimmingString=function formTrimmingString(trimmingChars){if(trimmingChars instanceof RegExp)return trimmingChars.source;return "[".concat(makeString(trimmingChars).replace(/([.*+?^=!:${}()|[\]/\\])/g,"\\$1"),"]")};var makeString=function makeString(itemToConvert){return (itemToConvert!==null&&itemToConvert!==void 0?itemToConvert:"")+""};
+	return parseDiff$1;
+}
+
+var parseDiffExports = requireParseDiff();
+var parseDiff = /*@__PURE__*/getDefaultExportFromCjs(parseDiffExports);
+
+const MATCH_PACKAGE_VERSION = /^\+\s*"?([^\s]+?)"?:\s+"?([^\s]+?)"?$/u;
+const parsePatch = (patch, changesetFile, catalog) => {
+    const diff = parseDiff(patch);
+    const packageFiles = diff
+        .flatMap(({ to, chunks }) => {
+        if (to == null) {
+            return [];
+        }
+        if (to === 'package.json' || to.endsWith('/package.json')) {
+            return [to];
+        }
+        if (to === 'pnpm-workspace.yaml' || to.endsWith('/pnpm-workspace.yaml')) {
+            return chunks
+                .flatMap((chunk) => chunk.changes.filter((change) => change.type === 'add'))
+                .flatMap(({ content }) => {
+                const m = content.match(MATCH_PACKAGE_VERSION);
+                if (m == null) {
+                    return [];
+                }
+                const packageId = `${m[1]}@${m[2]}`;
+                return catalog[packageId]?.map((v) => v.packageFile) ?? [];
+            });
+        }
+        return [];
+    });
     return {
-        packageFiles: changed.filter((f) => f === 'package.json' || f.endsWith('/package.json')),
-        foundChangeset: changed.includes(changesetFile),
+        // Dedupe the results before returning them
+        packageFiles: [...new Set(packageFiles)],
+        foundChangeset: diff.find((f) => f.to === changesetFile) != null,
     };
 };
 
@@ -44209,7 +44304,7 @@ const isInWorkspaces = (changesetFolder, workspaces) => {
         return validPackageFiles.reduce((acc, v) => acc || v.match(resolved), false);
     };
 };
-const processPullRequest = async (input, owner, repo, pr, patchString, changesetsConfig, commits, workspaces, getFile) => {
+const processPullRequest = async (input, owner, repo, pr, patchString, changesetsConfig, commits, getFile, catalogs, workspaces) => {
     if (commits.length !== 1) {
         debugJson('Refusing to update a PR with more than one commit', commits);
         return null;
@@ -44220,7 +44315,11 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
     const outputPath = join(input.changesetFolder, name);
     coreExports.info(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
     coreExports.debug('Fetching patch');
-    const patch = parsePatch(patchString, outputPath);
+    const patch = parsePatch(patchString, outputPath, catalogs);
+    if (patch.foundChangeset) {
+        coreExports.info(`Found an already existing changeset: ${outputPath}`);
+        return null;
+    }
     const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(isNpmPackage)));
     const errs = packageFiles.filter((v) => v.status === 'rejected');
     if (errs.length > 0) {
@@ -44245,6 +44344,81 @@ ${changeset.message}
     };
 };
 
+class TypedDocumentString extends String {
+    __apiType;
+    value;
+    __meta__;
+    constructor(value, __meta__) {
+        super(value);
+        this.value = value;
+        this.__meta__ = __meta__;
+    }
+    toString() {
+        return this.value;
+    }
+}
+const CreateCommitDocument = new TypedDocumentString(`
+    mutation createCommit($commit: CreateCommitOnBranchInput!) {
+  createCommitOnBranch(input: $commit) {
+    commit {
+      commitUrl
+    }
+  }
+}
+    `);
+
+const publishChangeset = async (octokit, owner, repo, head, file, commitMessage, author, signCommit) => {
+    const { content, outputPath } = file;
+    const base64Content = Buffer.from(content, 'utf8').toString('base64');
+    if (signCommit) {
+        coreExports.debug('Pushing changeset to Github');
+        if (author != null) {
+            throw new Error('Custom author information is incompatible with signing commits.');
+        }
+        await octokit.graphql(CreateCommitDocument.toString(), {
+            commit: {
+                clientMutationId: 'mscharley/dependency-changesets-action',
+                branch: {
+                    repositoryNameWithOwner: `${owner}/${repo}`,
+                    branchName: head.ref,
+                },
+                message: {
+                    headline: commitMessage,
+                },
+                expectedHeadOid: head.sha,
+                fileChanges: {
+                    additions: [
+                        {
+                            path: outputPath,
+                            contents: base64Content,
+                        },
+                    ],
+                },
+            },
+        });
+    }
+    else {
+        debugJson('Pushing changeset to Github', { owner, repo, head, outputPath });
+        try {
+            await octokit.rest.repos.createOrUpdateFileContents({
+                owner,
+                repo,
+                branch: head.ref,
+                path: outputPath,
+                message: commitMessage,
+                content: base64Content,
+                author,
+            });
+        }
+        catch (e) {
+            if (e instanceof Error && e.message.includes(`"sha" wasn't supplied`)) {
+                throw new Error('Attempted to update a changeset instead of creating a new one - this is probably a bug.', { cause: e });
+            }
+            throw e;
+        }
+    }
+};
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -44259,74 +44433,19 @@ async function run() {
     }
     const owner = pr.base.repo.owner?.login ?? pr.base.repo.organization;
     const repo = pr.base.repo.name;
-    const ref = pr.head.ref;
     if (owner == null) {
         throw new Error('Unable to determine the owner of this repo.');
     }
-    const getFromGithub = getFile(octokit, owner, repo, ref);
-    const maybeGetFromGithub = getOptionalFile(octokit, owner, repo, ref);
-    const [commits, patchString, [, changesetsConfig], [, pnpmWorkspaces], [, rootPackageJson]] = await Promise.all([
-        getCommitLog(octokit, owner, repo, pr),
-        getPrPatch(octokit, owner, repo, pr.number),
-        getFromGithub(isChangesetsConfiguration)(`${input.changesetFolder}/config.json`),
-        maybeGetFromGithub(isPnpmWorkspace)(join(input.changesetFolder, '../pnpm-workspace.yaml'), 'yaml'),
-        maybeGetFromGithub(isNpmPackage)(join(input.changesetFolder, '../package.json')),
-    ]);
+    const { getFromGithub, commits, patchString, changesetsConfig, pnpmWorkspace, pnpmLock, rootPackageJson, } = await fetchRequiredGithubFiles(octokit, owner, repo, pr, input.changesetFolder);
     debugJson('Changesets configuration', changesetsConfig);
-    const changeset = await processPullRequest(input, owner, repo, pr, patchString, changesetsConfig, commits, pnpmWorkspaces?.packages ?? rootPackageJson?.workspaces ?? null, getFromGithub);
-    if (changeset == null) {
+    const pnpmCatalogs = calculateCatalogUpdates(pnpmWorkspace, pnpmLock);
+    const upload = await processPullRequest(input, owner, repo, pr, patchString, changesetsConfig, commits, getFromGithub, pnpmCatalogs, pnpmWorkspace?.packages ?? rootPackageJson?.workspaces);
+    if (upload == null) {
         coreExports.setOutput('created-changeset', false);
         return;
     }
     const commitMessage = generateCommitMessage(input);
-    const { content, outputPath } = changeset;
-    if (input.signCommits) {
-        coreExports.debug('Pushing changeset to Github');
-        if (input.author != null) {
-            throw new Error('Custom author information is incompatible with signing commits.');
-        }
-        await octokit.graphql(CreateCommitDocument.toString(), {
-            commit: {
-                clientMutationId: 'mscharley/dependency-changesets-action',
-                branch: {
-                    repositoryNameWithOwner: `${owner}/${repo}`,
-                    branchName: pr.head.ref,
-                },
-                message: {
-                    headline: commitMessage,
-                },
-                expectedHeadOid: pr.head.sha,
-                fileChanges: {
-                    additions: [
-                        {
-                            path: outputPath,
-                            contents: Buffer.from(content, 'utf8').toString('base64'),
-                        },
-                    ],
-                },
-            },
-        });
-    }
-    else {
-        debugJson('Pushing changeset to Github', { owner, repo, ref, outputPath });
-        try {
-            await octokit.rest.repos.createOrUpdateFileContents({
-                owner,
-                repo,
-                branch: ref,
-                path: outputPath,
-                message: commitMessage,
-                content: Buffer.from(content, 'utf8').toString('base64'),
-                author: input.author,
-            });
-        }
-        catch (e) {
-            if (e instanceof Error && e.message.includes(`"sha" wasn't supplied`)) {
-                throw new Error('Attempted to update a changeset instead of creating a new one - this is probably a bug.', { cause: e });
-            }
-            throw e;
-        }
-    }
+    await publishChangeset(octokit, owner, repo, pr.head, upload, commitMessage, input.author, input.signCommits);
     // Set outputs for other workflow steps to use
     coreExports.setOutput('created-changeset', true);
 }

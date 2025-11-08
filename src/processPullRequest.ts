@@ -3,11 +3,12 @@ import { debug, info } from '@actions/core';
 import { dirname, join as joinPath, resolve } from 'node:path';
 import { isNpmPackage, type NpmPackage } from './model/NpmPackage.js';
 import type { ActionInput } from './io/parseInput.js';
+import type { CatalogUpdates } from './pnpm/calculateCatalogUpdates.js';
 import type { ChangesetsConfiguration } from './model/ChangesetsConfiguration.js';
 import { debugJson } from './io/debugJson.js';
 import { generateChangeset } from './generateChangeset.js';
 import { Minimatch } from 'minimatch';
-import { parsePatch } from './io/github/parsePatch.js';
+import { parsePatch } from './parsePatch.js';
 import type { TypeGuard } from 'generic-type-guard';
 
 type PackageFilter = (description: [string, NpmPackage]) => boolean;
@@ -33,7 +34,7 @@ export const isHiddenPrivatePackage = (config: ChangesetsConfiguration): Package
 	}
 };
 
-export const isInWorkspaces = (changesetFolder: string, workspaces: null | string[]): PackageFilter => {
+export const isInWorkspaces = (changesetFolder: string, workspaces: undefined | string[]): PackageFilter => {
 	if (workspaces == null) {
 		return yes;
 	}
@@ -49,6 +50,11 @@ export const isInWorkspaces = (changesetFolder: string, workspaces: null | strin
 	};
 };
 
+export interface UploadFile {
+	content: string;
+	outputPath: string;
+}
+
 export const processPullRequest = async (
 	input: Omit<ActionInput, 'octokit'>,
 	owner: string,
@@ -57,9 +63,10 @@ export const processPullRequest = async (
 	patchString: string,
 	changesetsConfig: ChangesetsConfiguration,
 	commits: Commit[],
-	workspaces: null | string[],
 	getFile: <T>(guard: TypeGuard<T>) => (path: string) => Promise<[string, T]>,
-): Promise<{ content: string; outputPath: string } | null> => {
+	catalogs: CatalogUpdates,
+	workspaces: string[] | undefined,
+): Promise<UploadFile | null> => {
 	if (commits.length !== 1) {
 		debugJson('Refusing to update a PR with more than one commit', commits);
 		return null;
@@ -71,7 +78,11 @@ export const processPullRequest = async (
 	info(`Creating changeset: ${owner}/${repo}#${pr.head.ref}:${outputPath}`);
 
 	debug('Fetching patch');
-	const patch = parsePatch(patchString, outputPath);
+	const patch = parsePatch(patchString, outputPath, catalogs);
+	if (patch.foundChangeset) {
+		info(`Found an already existing changeset: ${outputPath}`);
+		return null;
+	}
 	const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(isNpmPackage)));
 	const errs = packageFiles.filter((v): v is PromiseRejectedResult => v.status === 'rejected');
 	if (errs.length > 0) {

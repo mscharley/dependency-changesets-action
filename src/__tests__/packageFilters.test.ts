@@ -48,7 +48,7 @@ describe('packageFilters', () => {
 
 	describe('isInWorkspaces', () => {
 		it('allows files if there are no workspaces', () => {
-			expect(isInWorkspaces('.changeset', null)(['test/package.json', {}])).toBe(true);
+			expect(isInWorkspaces('.changeset', undefined)(['test/package.json', {}])).toBe(true);
 		});
 
 		it('allows files if they match workspaces', () => {

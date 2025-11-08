@@ -24,11 +24,11 @@
 	"scripts": {
 		"codegen": "graphql-code-generator",
 		"bundle": "pnpm run codegen && pnpm run package",
-		"ci-test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+		"ci-test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --show-seed --randomize --no-cache",
 		"lint": "tsc --noEmit && eslint",
 		"package": "rollup --config rollup.config.js",
 		"package:watch": "pnpm run package -- --watch",
-		"test": "(NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
+		"test": "(NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --show-seed --randomize --no-cache && make-coverage-badge --output-path ./badges/coverage.svg) || make-coverage-badge --output-path ./badges/coverage.svg",
 		"all": "pnpm run codegen && pnpm run lint && pnpm run test && pnpm run package"
 	},
 	"license": "MIT",
@@ -38,6 +38,7 @@
 		"@octokit/plugin-throttling": "^8.2.0",
 		"generic-type-guard": "^5.1.0",
 		"minimatch": "^10.1.1",
+		"parse-diff": "^0.11.1",
 		"yaml": "^2.8.1"
 	},
 	"devDependencies": {
