@@ -44110,7 +44110,7 @@ const processPullRequest = async (input, owner, repo, pr, patchString, changeset
         coreExports.info(`Found an already existing changeset: ${outputPath}`);
         return null;
     }
-    const packageFiles = await Promise.allSettled(patch.packageFiles.map(getFile(isNpmPackage)));
+    const packageFiles = await Promise.allSettled(patch.packageFiles.map(async (path) => getFile(isNpmPackage)(path)));
     const errs = packageFiles.filter((v) => v.status === 'rejected');
     if (errs.length > 0) {
         throw new AggregateError(errs.map((v) => v.reason));
