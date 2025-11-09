@@ -36208,7 +36208,13 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
     }
     const dt = dataType ?? 'json';
     const data = dt === 'json' ? JSON.parse(response.data) : dt === 'yaml' ? distExports.parse(response.data) : response.data;
-    assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
+    try {
+        assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
+    }
+    catch (e) {
+        debugJson(`${owner}/${repo}#${ref}:${path}`, data);
+        throw e;
+    }
     return [path, data];
 };
 const getFile = (octokit, owner, repo, ref) => (guard) => async (path, dataType) => {

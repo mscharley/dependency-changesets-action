@@ -3,6 +3,7 @@ import { debug } from '@actions/core';
 import type { OctokitClient } from '../OctokitClient.js';
 import { parse as parseYaml } from 'yaml';
 import type { TypeGuard } from 'generic-type-guard';
+import { debugJson } from '../debugJson.js';
 
 export const getOptionalFile
 	= (octokit: OctokitClient, owner: string, repo: string, ref: string) =>
@@ -33,7 +34,12 @@ export const getOptionalFile
 				}
 				const dt = dataType ?? 'json';
 				const data: unknown = dt === 'json' ? JSON.parse(response.data) : dt === 'yaml' ? parseYaml(response.data) : response.data;
-				assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
+				try {
+					assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
+				} catch (e) {
+					debugJson(`${owner}/${repo}#${ref}:${path}`, data);
+					throw e;
+				}
 
 				return [path, data];
 			};
