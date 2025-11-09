@@ -33,11 +33,11 @@ export const getOptionalFile
 					throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
 				}
 				const dt = dataType ?? 'json';
-				const data: unknown = dt === 'json' ? JSON.parse(response.data) : dt === 'yaml' ? parseYaml(response.data) : response.data;
+				const data: unknown = dt === 'json' ? JSON.parse(response.data) : (dt === 'yaml' ? parseYaml(response.data) : response.data);
 				try {
 					assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
 				} catch (e) {
-					debugJson(`${owner}/${repo}#${ref}:${path}`, data);
+					debugJson(`${owner}/${repo}#${ref}:${path} as ${dt}`, data);
 					throw e;
 				}
 
