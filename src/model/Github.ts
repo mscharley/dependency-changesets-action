@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-type-alias */
-import type { getOctokit } from '@actions/github';
 
-export type OctokitClient = ReturnType<typeof getOctokit>;
+import type { OctokitClient } from '../io/OctokitClient.js';
 
 export interface Ref {
 	ref: string;
@@ -28,4 +27,4 @@ export interface PullRequest {
 	title: string;
 }
 
-export type Commit = Awaited<ReturnType<ReturnType<typeof getOctokit>['rest']['pulls']['listCommits']>>['data'][number];
+export type Commit = Awaited<ReturnType<OctokitClient['rest']['pulls']['listCommits']>>['data'][number];

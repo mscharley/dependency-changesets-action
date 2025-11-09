@@ -1,8 +1,9 @@
 import { CreateCommitDocument, type CreateCommitMutationVariables } from '../generated/graphql.js';
-import type { OctokitClient, Ref } from '../model/Github.js';
 import type { Author } from './parseInput.js';
 import { debug } from '@actions/core';
 import { debugJson } from './debugJson.js';
+import type { OctokitClient } from './OctokitClient.js';
+import type { Ref } from '../model/Github.js';
 import type { UploadFile } from '../processPullRequest.js';
 
 export const publishChangeset = async (
