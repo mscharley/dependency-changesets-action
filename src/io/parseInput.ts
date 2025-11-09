@@ -1,14 +1,12 @@
 import { getBooleanInput, getInput, info, warning } from '@actions/core';
-import { throttling, type ThrottlingOptions } from '@octokit/plugin-throttling';
 import { debugJson } from './debugJson.js';
-import { getOctokit } from '@actions/github';
-import type { OctokitClient } from '../model/Github.js';
+import { OctokitClient } from './OctokitClient.js';
 
 const USE_SEMANTIC_COMMITS = 'INPUT_USE-SEMANTIC-COMMITS';
 
 export interface Author {
-	name: string;
 	email: string;
+	name: string;
 	dco: boolean;
 }
 
@@ -51,24 +49,25 @@ export const parseInput = (): ActionInput => {
 	} satisfies Omit<ActionInput, 'octokit'>;
 	debugJson('input', input);
 
-	const throttlingOptions: ThrottlingOptions = {
-		onRateLimit: (retryAfter, options) => {
-			warning(`Request quota exhausted for request ${options.method} ${options.url}`);
-			if (options.request.retryCount === 0) {
-				// only retries once
-				info(`Retrying after ${retryAfter} seconds!`);
-				return true;
-			}
-			return false;
+	const githubToken = getInput('token', { required: true });
+	const octokit = new OctokitClient({
+		auth: `token ${githubToken}`,
+		throttle: {
+			onRateLimit: (retryAfter, options): boolean => {
+				warning(`Request quota exhausted for request ${options.method} ${options.url}`);
+				if (options.request.retryCount === 0) {
+					// only retries once
+					info(`Retrying after ${retryAfter} seconds!`);
+					return true;
+				}
+				return false;
+			},
+			onSecondaryRateLimit: (_retryAfter, options): void => {
+				// does not retry, only logs a warning
+				warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+			},
 		},
-		onSecondaryRateLimit: (_retryAfter, options) => {
-			// does not retry, only logs a warning
-			warning(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
-		},
-	};
-	const octokit = getOctokit(getInput('token', { required: true }), {
-		throttle: throttlingOptions,
-	}, throttling);
+	});
 
 	return { ...input, octokit };
 };

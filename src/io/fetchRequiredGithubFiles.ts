@@ -1,5 +1,4 @@
 import { getFile, getOptionalFile } from './github/getFile.js';
-import type { OctokitClient, PullRequest } from '../model/Github.js';
 import { getCommitLog } from './github/getCommitLog.js';
 import { getPrPatch } from './github/getPrPatch.js';
 import { isChangesetsConfiguration } from '../model/ChangesetsConfiguration.js';
@@ -7,6 +6,8 @@ import { isNpmPackage } from '../model/NpmPackage.js';
 import { isPnpmLock } from '../model/PnpmLock.js';
 import { isPnpmWorkspace } from '../model/PnpmWorkspace.js';
 import { join } from 'node:path';
+import type { OctokitClient } from './OctokitClient.js';
+import type { PullRequest } from '../model/Github.js';
 import { warning } from '@actions/core';
 
 export const fetchRequiredGithubFiles = async (

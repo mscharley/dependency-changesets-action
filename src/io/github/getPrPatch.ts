@@ -1,6 +1,6 @@
 import { debug } from '@actions/core';
 import { debugJson } from '../debugJson.js';
-import type { OctokitClient } from '../../model/Github.js';
+import type { OctokitClient } from '../OctokitClient.js';
 
 export const getPrPatch = async (
 	octokit: OctokitClient,

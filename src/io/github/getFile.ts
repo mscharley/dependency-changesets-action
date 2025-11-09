@@ -1,6 +1,6 @@
 import { assert } from 'generic-type-guard';
 import { debug } from '@actions/core';
-import type { OctokitClient } from '../../model/Github.js';
+import type { OctokitClient } from '../OctokitClient.js';
 import { parse as parseYaml } from 'yaml';
 import type { TypeGuard } from 'generic-type-guard';
 
