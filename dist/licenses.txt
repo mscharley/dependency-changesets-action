@@ -1,5 +1,5 @@
 Name: @actions/core
-Version: 1.11.1
+Version: 2.0.1
 License: MIT
 Private: false
 Description: Actions core lib
@@ -21,7 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: @actions/http-client
-Version: 2.2.3
+Version: 3.0.0
 License: MIT
 Private: false
 Description: Actions Http Client
@@ -167,7 +167,7 @@ IN THE SOFTWARE.
 ---
 
 Name: @actions/exec
-Version: 1.1.1
+Version: 2.0.0
 License: MIT
 Private: false
 Description: Actions exec lib
@@ -189,7 +189,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: @actions/io
-Version: 1.1.3
+Version: 2.0.0
 License: MIT
 Private: false
 Description: Actions io lib
