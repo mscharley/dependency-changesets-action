@@ -11,7 +11,7 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
-		"types": [],
+		"types": ["node"],
 		"skipLibCheck": true,
 		"newLine": "lf",
 		"isolatedModules": true,
