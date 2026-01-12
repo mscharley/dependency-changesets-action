@@ -1,5 +1,5 @@
 Name: @actions/core
-Version: 2.0.1
+Version: 2.0.2
 License: MIT
 Private: false
 Description: Actions core lib
@@ -21,7 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: @actions/http-client
-Version: 3.0.0
+Version: 3.0.1
 License: MIT
 Private: false
 Description: Actions Http Client
@@ -918,7 +918,7 @@ SOFTWARE.
 ---
 
 Name: @octokit/request-error
-Version: 7.0.2
+Version: 7.1.0
 License: MIT
 Private: false
 Description: Error class for Octokit request errors
@@ -952,7 +952,7 @@ THE SOFTWARE.
 ---
 
 Name: @octokit/request
-Version: 10.0.6
+Version: 10.0.7
 License: MIT
 Private: false
 Description: Send parameterized requests to GitHub's APIs with sensible defaults in browsers and Node

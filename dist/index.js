@@ -24567,7 +24567,7 @@ function requireLib () {
 	        this._maxRetries = 1;
 	        this._keepAlive = false;
 	        this._disposed = false;
-	        this.userAgent = userAgent;
+	        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent);
 	        this.handlers = handlers || [];
 	        this.requestOptions = requestOptions;
 	        if (requestOptions) {
@@ -25046,6 +25046,17 @@ function requireLib () {
 	            });
 	        }
 	        return proxyAgent;
+	    }
+	    _getUserAgentWithOrchestrationId(userAgent) {
+	        const baseUserAgent = userAgent || 'actions/http-client';
+	        const orchId = process.env['ACTIONS_ORCHESTRATION_ID'];
+	        if (orchId) {
+	            // Sanitize the orchestration ID to ensure it contains only valid characters
+	            // Valid characters: 0-9, a-z, _, -, .
+	            const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, '_');
+	            return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
+	        }
+	        return baseUserAgent;
 	    }
 	    _performExponentialBackoff(retryNumber) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -37272,12 +37283,13 @@ class RequestError extends Error {
    */
   response;
   constructor(message, statusCode, options) {
-    super(message);
+    super(message, { cause: options.cause });
     this.name = "HttpError";
     this.status = Number.parseInt(statusCode);
     if (Number.isNaN(this.status)) {
       this.status = 0;
     }
+    /* v8 ignore else -- @preserve -- Bug with vitest coverage where it sees an else branch that doesn't exist */
     if ("response" in options) {
       this.response = options.response;
     }
@@ -37298,7 +37310,7 @@ class RequestError extends Error {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$5 = "10.0.6";
+var VERSION$5 = "10.0.7";
 
 // pkg/dist-src/defaults.js
 var defaults_default = {
@@ -37316,6 +37328,7 @@ function isPlainObject(value) {
   const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
   return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
 }
+var noop$2 = () => "";
 async function fetchWrapper(requestOptions) {
   const fetch = requestOptions.request?.fetch || globalThis.fetch;
   if (!fetch) {
@@ -37417,7 +37430,7 @@ async function fetchWrapper(requestOptions) {
 async function getResponseData(response) {
   const contentType = response.headers.get("content-type");
   if (!contentType) {
-    return response.text().catch(() => "");
+    return response.text().catch(noop$2);
   }
   const mimetype = fastContentTypeParseExports.safeParse(contentType);
   if (isJSONResponse(mimetype)) {
@@ -37429,9 +37442,12 @@ async function getResponseData(response) {
       return text;
     }
   } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
-    return response.text().catch(() => "");
+    return response.text().catch(noop$2);
   } else {
-    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+    return response.arrayBuffer().catch(
+      /* v8 ignore next -- @preserve */
+      () => new ArrayBuffer(0)
+    );
   }
 }
 function isJSONResponse(mimetype) {
@@ -37478,6 +37494,8 @@ function withDefaults$1(oldEndpoint, newDefaults) {
 
 // pkg/dist-src/index.js
 var request = withDefaults$1(endpoint, defaults_default);
+/* v8 ignore next -- @preserve */
+/* v8 ignore else -- @preserve */
 
 // pkg/dist-src/index.js
 
