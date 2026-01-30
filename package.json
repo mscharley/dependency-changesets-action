@@ -63,7 +63,7 @@
 		"rollup-plugin-license": "3.6.0",
 		"typescript": "5.9.3"
 	},
-	"packageManager": "pnpm@10.28.1",
+	"packageManager": "pnpm@10.28.2",
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@swc/core",
