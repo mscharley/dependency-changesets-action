@@ -1193,12 +1193,12 @@ THE SOFTWARE.
 
 ---
 
-Name: @isaacs/balanced-match
-Version: 4.0.1
+Name: balanced-match
+Version: 4.0.3
 License: MIT
 Private: false
 Description: Match balanced character pairs, like "{" and "}"
-Repository: git://github.com/isaacs/balanced-match.git
+Repository: git://github.com/juliangruber/balanced-match.git
 License Copyright:
 ===
 
@@ -1228,11 +1228,12 @@ SOFTWARE.
 
 ---
 
-Name: @isaacs/brace-expansion
-Version: 5.0.0
+Name: brace-expansion
+Version: 5.0.2
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
+Repository: git+ssh://git@github.com/juliangruber/brace-expansion.git
 License Copyright:
 ===
 
@@ -1263,7 +1264,7 @@ SOFTWARE.
 ---
 
 Name: minimatch
-Version: 10.1.1
+Version: 10.2.1
 License: BlueOak-1.0.0
 Private: false
 Description: a glob matcher in javascript
