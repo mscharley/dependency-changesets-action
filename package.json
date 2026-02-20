@@ -39,7 +39,7 @@
 		"@octokit/plugin-rest-endpoint-methods": "^17.0.0",
 		"@octokit/plugin-throttling": "^11.0.3",
 		"generic-type-guard": "^5.1.0",
-		"minimatch": "^10.1.1",
+		"minimatch": "^10.2.1",
 		"parse-diff": "^0.11.1",
 		"yaml": "^2.8.2"
 	},
