@@ -5,7 +5,7 @@ Private: false
 Description: Actions core lib
 Repository: git+https://github.com/actions/toolkit.git
 Homepage: https://github.com/actions/toolkit/tree/main/packages/core
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -28,7 +28,7 @@ Description: Node HTTP/HTTPS Agents for tunneling proxies
 Repository: https://github.com/koichik/node-tunnel.git
 Homepage: https://github.com/koichik/node-tunnel/
 Author: Koichi Kobayashi <koichik@improvement.jp>
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -70,7 +70,7 @@ Contributors:
   Robert Nagy (https://github.com/ronag)
   Szymon Marczak (https://github.com/szmarczak)
   Tomas Della Vedova (https://github.com/delvedor)
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -104,7 +104,7 @@ Private: false
 Description: Actions Http Client
 Repository: git+https://github.com/actions/toolkit.git
 Homepage: https://github.com/actions/toolkit/tree/main/packages/http-client
-License Copyright:
+License Text:
 ===
 
 Actions Http Client for Node.js
@@ -138,7 +138,7 @@ Private: false
 Description: Actions io lib
 Repository: git+https://github.com/actions/toolkit.git
 Homepage: https://github.com/actions/toolkit/tree/main/packages/io
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -160,7 +160,7 @@ Private: false
 Description: Actions exec lib
 Repository: git+https://github.com/actions/toolkit.git
 Homepage: https://github.com/actions/toolkit/tree/main/packages/exec
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -183,7 +183,7 @@ Description: Generic type guards for TypeScript
 Repository: git+https://github.com/mscharley/generic-type-guard.git
 Homepage: https://github.com/mscharley/generic-type-guard#readme
 Author: Matthew Scharley
-License Copyright:
+License Text:
 ===
 
 Mozilla Public License Version 2.0
@@ -552,7 +552,7 @@ Description: JavaScript parser and stringifier for YAML
 Repository: undefined
 Homepage: https://eemeli.org/yaml/
 Author: Eemeli Aro <eemeli@gmail.com>
-License Copyright:
+License Text:
 ===
 
 Copyright Eemeli Aro <eemeli@gmail.com>
@@ -578,7 +578,7 @@ Private: false
 Description: Get a user agent string across all JavaScript Runtime Environments
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 # [ISC License](https://spdx.org/licenses/ISC)
@@ -598,7 +598,7 @@ Private: false
 Description: asynchronous before/error/after hooks for internal functionality
 Repository: undefined
 Author: Gregor Martynus
-License Copyright:
+License Text:
 ===
 
                                  Apache License
@@ -812,7 +812,7 @@ Private: false
 Description: Turns REST API endpoints into generic request options
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -852,7 +852,7 @@ Contributors:
   Manuel Spigolon <behemoth89@gmail.com>
   James Sumners (https://james.sumners.info)
   Frazer Smith <frazer.dev@icloud.com> (https://github.com/fdawgs)
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -889,7 +889,7 @@ Private: false
 Description: Error class for Octokit request errors
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -923,7 +923,7 @@ Private: false
 Description: Send parameterized requests to GitHub's APIs with sensible defaults in browsers and Node
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -957,7 +957,7 @@ Private: false
 Description: GitHub GraphQL API client for browsers and Node
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -991,7 +991,7 @@ Private: false
 Description: GitHub API token authentication for browsers and Node.js
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -1025,7 +1025,7 @@ Private: false
 Description: Extendable client for GitHub's REST & GraphQL APIs
 Repository: undefined
 Author: Gregor Martynus (https://github.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -1058,7 +1058,7 @@ License: MIT
 Private: false
 Description: Octokit plugin to paginate REST API endpoint responses
 Repository: undefined
-License Copyright:
+License Text:
 ===
 
 MIT License Copyright (c) 2019 Octokit contributors
@@ -1078,7 +1078,7 @@ Private: false
 Description: Octokit plugin adding one method for all of api.github.com REST API endpoints
 Repository: undefined
 Author: Gregor Martynus (https://twitter.com/gr2m)
-License Copyright:
+License Text:
 ===
 
 MIT License Copyright (c) 2019 Octokit contributors
@@ -1098,7 +1098,7 @@ Private: false
 Description: Distributed task scheduler and rate limiter
 Repository: https://github.com/SGrondin/bottleneck
 Author: Simon Grondin
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -1131,7 +1131,7 @@ Private: false
 Description: Octokit plugin for GitHub's recommended request throttling
 Repository: undefined
 Author: Simon Grondin (http://github.com/SGrondin)
-License Copyright:
+License Text:
 ===
 
 The MIT License
@@ -1164,7 +1164,7 @@ License: MIT
 Private: false
 Description: Match balanced character pairs, like "{" and "}"
 Repository: git://github.com/juliangruber/balanced-match.git
-License Copyright:
+License Text:
 ===
 
 (MIT)
@@ -1199,7 +1199,7 @@ License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
 Repository: git+ssh://git@github.com/juliangruber/brace-expansion.git
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -1235,7 +1235,7 @@ Private: false
 Description: a glob matcher in javascript
 Repository: git@github.com:isaacs/minimatch
 Author: Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
-License Copyright:
+License Text:
 ===
 
 # Blue Oak Model License
@@ -1303,7 +1303,7 @@ Private: false
 Description: Unified diff parser
 Repository: git@github.com:sergeyt/parse-diff.git
 Author: Sergey Todyshev <stodyshev@gmail.com>
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
