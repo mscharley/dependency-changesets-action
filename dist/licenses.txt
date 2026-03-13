@@ -1193,7 +1193,7 @@ THE SOFTWARE.
 ---
 
 Name: balanced-match
-Version: 4.0.3
+Version: 4.0.4
 License: MIT
 Private: false
 Description: Match balanced character pairs, like "{" and "}"
@@ -1228,7 +1228,7 @@ SOFTWARE.
 ---
 
 Name: brace-expansion
-Version: 5.0.2
+Version: 5.0.4
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
@@ -1263,7 +1263,7 @@ SOFTWARE.
 ---
 
 Name: minimatch
-Version: 10.2.2
+Version: 10.2.3
 License: BlueOak-1.0.0
 Private: false
 Description: a glob matcher in javascript
