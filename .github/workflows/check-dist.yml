@@ -4,8 +4,9 @@
 # the build process. We need to make sure that the checked-in `dist/index.js`
 # file matches what is expected from the build.
 #
-# This workflow will fail if the checked-in `dist/index.js` file does not match
-# what is expected from the build.
+# This workflow will rebuild the dist/ directory and push updates back to the
+# branch if needed. It uses pull_request_target to ensure the workflow always
+# runs from main, preventing malicious PRs from modifying the build process.
 name: Check dist/
 
 on:
@@ -14,7 +15,7 @@ on:
       - main
     paths-ignore:
       - '**.md'
-  pull_request:
+  pull_request_target:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
@@ -27,13 +28,15 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       statuses: write
 
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
       - name: Setup Node.js
@@ -50,19 +53,39 @@ jobs:
         id: build
         run: pnpm run bundle
 
-      - name: Compare Expected and Actual Directories
+      - name: Generate Coverage Badge
+        id: badge
+        run: |
+          pnpm run ci-test || true
+          npx make-coverage-badge --output-path ./dist/coverage.svg
+
+      - name: Check for dist/ Changes
         id: diff
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
-            echo "Detected uncommitted changes after build. See status below:"
-            git diff --ignore-space-at-eol --text dist/
-            exit 1
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # If index.js was different than expected, upload the expected version as
+      - name: Push dist/ Updates
+        if: steps.diff.outputs.changed == 'true' && github.event_name == 'pull_request_target'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          git commit -s -m "chore: rebuild dist/"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+      - name: Fail if dist/ is Out of Date
+        if: steps.diff.outputs.changed == 'true' && github.event_name != 'pull_request_target'
+        run: |
+          echo "Detected uncommitted changes after build. See status below:"
+          git diff --ignore-space-at-eol --text dist/
+          exit 1
+
+      # If dist/ was different than expected, upload the expected version as
       # a workflow artifact.
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+        if: ${{ failure() && steps.diff.outputs.changed == 'true' }}
         with:
           name: dist
           path: dist/
