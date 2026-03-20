@@ -6,10 +6,8 @@ export const isPnpmCatalog = new IsInterface().withStringIndexSignature(isString
 export type PnpmCatalog = GuardedType<typeof isPnpmCatalog>;
 
 export const isPnpmWorkspace = new IsInterface()
-	.withProperties({
-		packages: isArray(isString),
-	})
 	.withOptionalProperties({
+		packages: isArray(isString),
 		catalog: isPnpmCatalog,
 		catalogs: new IsInterface().withStringIndexSignature(isPnpmCatalog).get(),
 	})
