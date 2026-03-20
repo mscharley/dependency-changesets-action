@@ -1,6 +1,6 @@
 # Changesets for dependency updaters
 
-![Coverage](https://raw.githubusercontent.com/mscharley/dependency-changesets-action/refs/heads/main/badges/coverage.svg)
+![Coverage](https://raw.githubusercontent.com/mscharley/dependency-changesets-action/refs/heads/main/dist/coverage.svg)
 
 This action aims to bring support for the [changesets][changesets] release management software to [Mend
 Renovate][renovate] and other dependency updating services.
