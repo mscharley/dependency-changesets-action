@@ -37097,10 +37097,8 @@ const isPnpmLock = new IsInterface().withOptionalProperties({
 /* eslint-disable @typescript-eslint/no-type-alias */
 const isPnpmCatalog = new IsInterface().withStringIndexSignature(isString).get();
 const isPnpmWorkspace = new IsInterface()
-    .withProperties({
-    packages: isArray(isString),
-})
     .withOptionalProperties({
+    packages: isArray(isString),
     catalog: isPnpmCatalog,
     catalogs: new IsInterface().withStringIndexSignature(isPnpmCatalog).get(),
 })
