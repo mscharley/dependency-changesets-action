@@ -61,7 +61,7 @@
 		"make-coverage-badge": "1.2.0",
 		"rollup": "4.60.0",
 		"rollup-plugin-license": "3.7.0",
-		"typescript": "5.9.3"
+		"typescript": "6.0.2"
 	},
 	"packageManager": "pnpm@10.33.0",
 	"pnpm": {
