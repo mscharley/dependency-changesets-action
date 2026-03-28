@@ -8,7 +8,7 @@ permissions: {}
 
 jobs:
   stale:
-    uses: mscharley/.github/.github/workflows/stale.yml@main
+    uses: mscharley/.github/.github/workflows/stale.yml@607da10e9d82a5578e0a307efdf9983020e43b87 # main
     permissions:
       issues: write
       pull-requests: write
