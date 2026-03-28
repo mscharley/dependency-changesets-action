@@ -28136,6 +28136,9 @@ var assert = function(value, guard, message) {
   }
 };
 var MINIMUM_ARRAY_INDEX = 0;
+var isNumber = function(n) {
+  return typeof n === "number" && !isNaN(n);
+};
 var isString = function(s) {
   return typeof s === "string";
 };
@@ -37095,7 +37098,8 @@ const isPnpmLock = new IsInterface().withOptionalProperties({
 }).get();
 
 /* eslint-disable @typescript-eslint/no-type-alias */
-const isPnpmCatalog = new IsInterface().withStringIndexSignature(isString).get();
+// YAML may parse bare version numbers (e.g. pinned `2` or `3.0`) as numbers rather than strings
+const isPnpmCatalog = new IsInterface().withStringIndexSignature(isUnion(isString, isNumber)).get();
 const isPnpmWorkspace = new IsInterface()
     .withOptionalProperties({
     packages: isArray(isString),
