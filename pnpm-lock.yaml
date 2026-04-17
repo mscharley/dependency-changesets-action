@@ -85,8 +85,8 @@ importers:
         specifier: 4.60.1
         version: 4.60.1
       rollup-plugin-license:
-        specifier: 3.7.0
-        version: 3.7.0(picomatch@4.0.4)(rollup@4.60.1)
+        specifier: 3.7.1
+        version: 3.7.1(picomatch@4.0.4)(rollup@4.60.1)
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -3271,8 +3271,8 @@ packages:
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
 
-  rollup-plugin-license@3.7.0:
-    resolution: {integrity: sha512-RvvOIF+GH3fBR3wffgc/vmjQn6qOn72WjppWVDp/v+CLpT0BbcRBdSkPeeIOL6U5XccdYgSIMjUyXgxlKEEFcw==}
+  rollup-plugin-license@3.7.1:
+    resolution: {integrity: sha512-FcGXUbAmPvRSLxjVdjp/r/MUtKBlttVQd+ApUyvKfREnsoAfAZA6Ic2fE1Tz4RL0f9XqEQU9UIRNUMdtQtliDw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
@@ -7511,7 +7511,7 @@ snapshots:
 
   rfdc@1.4.1: {}
 
-  rollup-plugin-license@3.7.0(picomatch@4.0.4)(rollup@4.60.1):
+  rollup-plugin-license@3.7.1(picomatch@4.0.4)(rollup@4.60.1):
     dependencies:
       commenting: 1.1.0
       fdir: 6.5.0(picomatch@4.0.4)
