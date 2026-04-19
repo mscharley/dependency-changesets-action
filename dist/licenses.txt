@@ -56,7 +56,7 @@ THE SOFTWARE.
 ---
 
 Name: undici
-Version: 6.23.0
+Version: 6.25.0
 License: MIT
 Private: false
 Description: An HTTP/1.1 client, written from scratch for Node.js
@@ -883,7 +883,7 @@ SOFTWARE.
 ---
 
 Name: json-with-bigint
-Version: 3.5.3
+Version: 3.5.8
 License: MIT
 Private: false
 Description: JS library that allows you to easily serialize and deserialize data with BigInt values
@@ -1228,7 +1228,7 @@ SOFTWARE.
 ---
 
 Name: brace-expansion
-Version: 5.0.4
+Version: 5.0.5
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
@@ -1263,7 +1263,7 @@ SOFTWARE.
 ---
 
 Name: minimatch
-Version: 10.2.4
+Version: 10.2.5
 License: BlueOak-1.0.0
 Private: false
 Description: a glob matcher in javascript

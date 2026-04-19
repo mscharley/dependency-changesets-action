@@ -940,6 +940,24 @@ function requireErrors$1 () {
 	  [kSecureProxyConnectionError] = true
 	}
 
+	const kMessageSizeExceededError = Symbol.for('undici.error.UND_ERR_WS_MESSAGE_SIZE_EXCEEDED');
+	class MessageSizeExceededError extends UndiciError {
+	  constructor (message) {
+	    super(message);
+	    this.name = 'MessageSizeExceededError';
+	    this.message = message || 'Max decompressed message size exceeded';
+	    this.code = 'UND_ERR_WS_MESSAGE_SIZE_EXCEEDED';
+	  }
+
+	  static [Symbol.hasInstance] (instance) {
+	    return instance && instance[kMessageSizeExceededError] === true
+	  }
+
+	  get [kMessageSizeExceededError] () {
+	    return true
+	  }
+	}
+
 	errors$1 = {
 	  AbortError,
 	  HTTPParserError,
@@ -963,7 +981,8 @@ function requireErrors$1 () {
 	  ResponseExceededMaxSizeError,
 	  RequestRetryError,
 	  ResponseError,
-	  SecureProxyConnectionError
+	  SecureProxyConnectionError,
+	  MessageSizeExceededError
 	};
 	return errors$1;
 }
@@ -2264,6 +2283,10 @@ function requireRequest$1 () {
 	      throw new InvalidArgumentError('upgrade must be a string')
 	    }
 
+	    if (upgrade && !isValidHeaderValue(upgrade)) {
+	      throw new InvalidArgumentError('invalid upgrade header')
+	    }
+
 	    if (headersTimeout != null && (!Number.isFinite(headersTimeout) || headersTimeout < 0)) {
 	      throw new InvalidArgumentError('invalid headersTimeout')
 	    }
@@ -2558,13 +2581,19 @@ function requireRequest$1 () {
 	    val = `${val}`;
 	  }
 
-	  if (request.host === null && headerName === 'host') {
+	  if (headerName === 'host') {
+	    if (request.host !== null) {
+	      throw new InvalidArgumentError('duplicate host header')
+	    }
 	    if (typeof val !== 'string') {
 	      throw new InvalidArgumentError('invalid host header')
 	    }
 	    // Consumed by Client
 	    request.host = val;
-	  } else if (request.contentLength === null && headerName === 'content-length') {
+	  } else if (headerName === 'content-length') {
+	    if (request.contentLength !== null) {
+	      throw new InvalidArgumentError('duplicate content-length header')
+	    }
 	    request.contentLength = parseInt(val, 10);
 	    if (!Number.isFinite(request.contentLength)) {
 	      throw new InvalidArgumentError('invalid content-length header')
@@ -2685,15 +2714,23 @@ function requireDispatcherBase () {
 	const kOnDestroyed = Symbol('onDestroyed');
 	const kOnClosed = Symbol('onClosed');
 	const kInterceptedDispatch = Symbol('Intercepted Dispatch');
+	const kWebSocketOptions = Symbol('webSocketOptions');
 
 	class DispatcherBase extends Dispatcher {
-	  constructor () {
+	  constructor (opts) {
 	    super();
 
 	    this[kDestroyed] = false;
 	    this[kOnDestroyed] = null;
 	    this[kClosed] = false;
 	    this[kOnClosed] = [];
+	    this[kWebSocketOptions] = opts?.webSocket ?? {};
+	  }
+
+	  get webSocketOptions () {
+	    return {
+	      maxPayloadSize: this[kWebSocketOptions].maxPayloadSize ?? 128 * 1024 * 1024
+	    }
 	  }
 
 	  get destroyed () {
@@ -11071,9 +11108,10 @@ function requireClient () {
 	    autoSelectFamilyAttemptTimeout,
 	    // h2
 	    maxConcurrentStreams,
-	    allowH2
+	    allowH2,
+	    webSocket
 	  } = {}) {
-	    super();
+	    super({ webSocket });
 
 	    if (keepAlive !== undefined) {
 	      throw new InvalidArgumentError('unsupported keepAlive, use pipelining=0 instead')
@@ -11780,8 +11818,8 @@ function requirePoolBase () {
 	const kStats = Symbol('stats');
 
 	class PoolBase extends DispatcherBase {
-	  constructor () {
-	    super();
+	  constructor (opts) {
+	    super(opts);
 
 	    this[kQueue] = new FixedQueue();
 	    this[kClients] = [];
@@ -12000,8 +12038,6 @@ function requirePool () {
 	    allowH2,
 	    ...options
 	  } = {}) {
-	    super();
-
 	    if (connections != null && (!Number.isFinite(connections) || connections < 0)) {
 	      throw new InvalidArgumentError('invalid connections')
 	    }
@@ -12025,6 +12061,8 @@ function requirePool () {
 	        ...connect
 	      });
 	    }
+
+	    super(options);
 
 	    this[kInterceptors] = options.interceptors?.Pool && Array.isArray(options.interceptors.Pool)
 	      ? options.interceptors.Pool
@@ -12319,7 +12357,6 @@ function requireAgent () {
 
 	class Agent extends DispatcherBase {
 	  constructor ({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
-	    super();
 
 	    if (typeof factory !== 'function') {
 	      throw new InvalidArgumentError('factory must be a function.')
@@ -12332,6 +12369,8 @@ function requireAgent () {
 	    if (!Number.isInteger(maxRedirections) || maxRedirections < 0) {
 	      throw new InvalidArgumentError('maxRedirections must be a positive number')
 	    }
+
+	    super(options);
 
 	    if (connect && typeof connect !== 'function') {
 	      connect = { ...connect };
@@ -24921,6 +24960,12 @@ function requireUtil$1 () {
 	 * @param {string} value
 	 */
 	function isValidClientWindowBits (value) {
+	  // Must have at least one character
+	  if (value.length === 0) {
+	    return false
+	  }
+
+	  // Check all characters are ASCII digits
 	  for (let i = 0; i < value.length; i++) {
 	    const byte = value.charCodeAt(i);
 
@@ -24929,7 +24974,9 @@ function requireUtil$1 () {
 	    }
 	  }
 
-	  return true
+	  // Check numeric range: zlib requires windowBits in range 8-15
+	  const num = Number.parseInt(value, 10);
+	  return num >= 8 && num <= 15
 	}
 
 	// https://nodejs.org/api/intl.html#detecting-internationalization-support
@@ -25459,6 +25506,7 @@ function requirePermessageDeflate () {
 
 	const { createInflateRaw, Z_DEFAULT_WINDOWBITS } = require$$1$2;
 	const { isValidClientWindowBits } = requireUtil$1();
+	const { MessageSizeExceededError } = requireErrors$1();
 
 	const tail = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 	const kBuffer = Symbol('kBuffer');
@@ -25470,17 +25518,29 @@ function requirePermessageDeflate () {
 
 	  #options = {}
 
-	  constructor (extensions) {
+	  #maxPayloadSize = 0
+
+	  /**
+	   * @param {Map<string, string>} extensions
+	   */
+	  constructor (extensions, options) {
 	    this.#options.serverNoContextTakeover = extensions.has('server_no_context_takeover');
 	    this.#options.serverMaxWindowBits = extensions.get('server_max_window_bits');
+
+	    this.#maxPayloadSize = options.maxPayloadSize;
 	  }
 
+	  /**
+	   * Decompress a compressed payload.
+	   * @param {Buffer} chunk Compressed data
+	   * @param {boolean} fin Final fragment flag
+	   * @param {Function} callback Callback function
+	   */
 	  decompress (chunk, fin, callback) {
 	    // An endpoint uses the following algorithm to decompress a message.
 	    // 1.  Append 4 octets of 0x00 0x00 0xff 0xff to the tail end of the
 	    //     payload of the message.
 	    // 2.  Decompress the resulting data using DEFLATE.
-
 	    if (!this.#inflate) {
 	      let windowBits = Z_DEFAULT_WINDOWBITS;
 
@@ -25493,13 +25553,26 @@ function requirePermessageDeflate () {
 	        windowBits = Number.parseInt(this.#options.serverMaxWindowBits);
 	      }
 
-	      this.#inflate = createInflateRaw({ windowBits });
+	      try {
+	        this.#inflate = createInflateRaw({ windowBits });
+	      } catch (err) {
+	        callback(err);
+	        return
+	      }
 	      this.#inflate[kBuffer] = [];
 	      this.#inflate[kLength] = 0;
 
 	      this.#inflate.on('data', (data) => {
-	        this.#inflate[kBuffer].push(data);
 	        this.#inflate[kLength] += data.length;
+
+	        if (this.#maxPayloadSize > 0 && this.#inflate[kLength] > this.#maxPayloadSize) {
+	          callback(new MessageSizeExceededError());
+	          this.#inflate.removeAllListeners();
+	          this.#inflate = null;
+	          return
+	        }
+
+	        this.#inflate[kBuffer].push(data);
 	      });
 
 	      this.#inflate.on('error', (err) => {
@@ -25514,6 +25587,10 @@ function requirePermessageDeflate () {
 	    }
 
 	    this.#inflate.flush(() => {
+	      if (!this.#inflate) {
+	        return
+	      }
+
 	      const full = Buffer.concat(this.#inflate[kBuffer], this.#inflate[kLength]);
 
 	      this.#inflate[kBuffer].length = 0;
@@ -25553,6 +25630,7 @@ function requireReceiver () {
 	const { WebsocketFrameSend } = requireFrame();
 	const { closeWebSocketConnection } = requireConnection();
 	const { PerMessageDeflate } = requirePermessageDeflate();
+	const { MessageSizeExceededError } = requireErrors$1();
 
 	// This code was influenced by ws released under the MIT license.
 	// Copyright (c) 2011 Einar Otto Stangvik <einaros@gmail.com>
@@ -25561,6 +25639,7 @@ function requireReceiver () {
 
 	class ByteParser extends Writable {
 	  #buffers = []
+	  #fragmentsBytes = 0
 	  #byteOffset = 0
 	  #loop = false
 
@@ -25572,14 +25651,23 @@ function requireReceiver () {
 	  /** @type {Map<string, PerMessageDeflate>} */
 	  #extensions
 
-	  constructor (ws, extensions) {
+	  /** @type {number} */
+	  #maxPayloadSize
+
+	  /**
+	   * @param {import('./websocket').WebSocket} ws
+	   * @param {Map<string, string>|null} extensions
+	   * @param {{ maxPayloadSize?: number }} [options]
+	   */
+	  constructor (ws, extensions, options = {}) {
 	    super();
 
 	    this.ws = ws;
 	    this.#extensions = extensions == null ? new Map() : extensions;
+	    this.#maxPayloadSize = options.maxPayloadSize ?? 0;
 
 	    if (this.#extensions.has('permessage-deflate')) {
-	      this.#extensions.set('permessage-deflate', new PerMessageDeflate(extensions));
+	      this.#extensions.set('permessage-deflate', new PerMessageDeflate(extensions, options));
 	    }
 	  }
 
@@ -25593,6 +25681,19 @@ function requireReceiver () {
 	    this.#loop = true;
 
 	    this.run(callback);
+	  }
+
+	  #validatePayloadLength () {
+	    if (
+	      this.#maxPayloadSize > 0 &&
+	      !isControlFrame(this.#info.opcode) &&
+	      this.#info.payloadLength > this.#maxPayloadSize
+	    ) {
+	      failWebsocketConnection(this.ws, 'Payload size exceeds maximum allowed size');
+	      return false
+	    }
+
+	    return true
 	  }
 
 	  /**
@@ -25683,6 +25784,10 @@ function requireReceiver () {
 	        if (payloadLength <= 125) {
 	          this.#info.payloadLength = payloadLength;
 	          this.#state = parserStates.READ_DATA;
+
+	          if (!this.#validatePayloadLength()) {
+	            return
+	          }
 	        } else if (payloadLength === 126) {
 	          this.#state = parserStates.PAYLOADLENGTH_16;
 	        } else if (payloadLength === 127) {
@@ -25707,6 +25812,10 @@ function requireReceiver () {
 
 	        this.#info.payloadLength = buffer.readUInt16BE(0);
 	        this.#state = parserStates.READ_DATA;
+
+	        if (!this.#validatePayloadLength()) {
+	          return
+	        }
 	      } else if (this.#state === parserStates.PAYLOADLENGTH_64) {
 	        if (this.#byteOffset < 8) {
 	          return callback()
@@ -25714,6 +25823,7 @@ function requireReceiver () {
 
 	        const buffer = this.consume(8);
 	        const upper = buffer.readUInt32BE(0);
+	        const lower = buffer.readUInt32BE(4);
 
 	        // 2^31 is the maximum bytes an arraybuffer can contain
 	        // on 32-bit systems. Although, on 64-bit systems, this is
@@ -25721,15 +25831,17 @@ function requireReceiver () {
 	        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Invalid_array_length
 	        // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/common/globals.h;drc=1946212ac0100668f14eb9e2843bdd846e510a1e;bpv=1;bpt=1;l=1275
 	        // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/objects/js-array-buffer.h;l=34;drc=1946212ac0100668f14eb9e2843bdd846e510a1e
-	        if (upper > 2 ** 31 - 1) {
+	        if (upper !== 0 || lower > 2 ** 31 - 1) {
 	          failWebsocketConnection(this.ws, 'Received payload length > 2^31 bytes.');
 	          return
 	        }
 
-	        const lower = buffer.readUInt32BE(4);
-
-	        this.#info.payloadLength = (upper << 8) + lower;
+	        this.#info.payloadLength = lower;
 	        this.#state = parserStates.READ_DATA;
+
+	        if (!this.#validatePayloadLength()) {
+	          return
+	        }
 	      } else if (this.#state === parserStates.READ_DATA) {
 	        if (this.#byteOffset < this.#info.payloadLength) {
 	          return callback()
@@ -25742,42 +25854,53 @@ function requireReceiver () {
 	          this.#state = parserStates.INFO;
 	        } else {
 	          if (!this.#info.compressed) {
-	            this.#fragments.push(body);
+	            this.writeFragments(body);
+
+	            if (this.#maxPayloadSize > 0 && this.#fragmentsBytes > this.#maxPayloadSize) {
+	              failWebsocketConnection(this.ws, new MessageSizeExceededError().message);
+	              return
+	            }
 
 	            // If the frame is not fragmented, a message has been received.
 	            // If the frame is fragmented, it will terminate with a fin bit set
 	            // and an opcode of 0 (continuation), therefore we handle that when
 	            // parsing continuation frames, not here.
 	            if (!this.#info.fragmented && this.#info.fin) {
-	              const fullMessage = Buffer.concat(this.#fragments);
-	              websocketMessageReceived(this.ws, this.#info.binaryType, fullMessage);
-	              this.#fragments.length = 0;
+	              websocketMessageReceived(this.ws, this.#info.binaryType, this.consumeFragments());
 	            }
 
 	            this.#state = parserStates.INFO;
 	          } else {
-	            this.#extensions.get('permessage-deflate').decompress(body, this.#info.fin, (error, data) => {
-	              if (error) {
-	                closeWebSocketConnection(this.ws, 1007, error.message, error.message.length);
-	                return
-	              }
+	            this.#extensions.get('permessage-deflate').decompress(
+	              body,
+	              this.#info.fin,
+	              (error, data) => {
+	                if (error) {
+	                  failWebsocketConnection(this.ws, error.message);
+	                  return
+	                }
 
-	              this.#fragments.push(data);
+	                this.writeFragments(data);
 
-	              if (!this.#info.fin) {
-	                this.#state = parserStates.INFO;
+	                if (this.#maxPayloadSize > 0 && this.#fragmentsBytes > this.#maxPayloadSize) {
+	                  failWebsocketConnection(this.ws, new MessageSizeExceededError().message);
+	                  return
+	                }
+
+	                if (!this.#info.fin) {
+	                  this.#state = parserStates.INFO;
+	                  this.#loop = true;
+	                  this.run(callback);
+	                  return
+	                }
+
+	                websocketMessageReceived(this.ws, this.#info.binaryType, this.consumeFragments());
+
 	                this.#loop = true;
+	                this.#state = parserStates.INFO;
 	                this.run(callback);
-	                return
 	              }
-
-	              websocketMessageReceived(this.ws, this.#info.binaryType, Buffer.concat(this.#fragments));
-
-	              this.#loop = true;
-	              this.#state = parserStates.INFO;
-	              this.#fragments.length = 0;
-	              this.run(callback);
-	            });
+	            );
 
 	            this.#loop = false;
 	            break
@@ -25827,6 +25950,26 @@ function requireReceiver () {
 	    this.#byteOffset -= n;
 
 	    return buffer
+	  }
+
+	  writeFragments (fragment) {
+	    this.#fragmentsBytes += fragment.length;
+	    this.#fragments.push(fragment);
+	  }
+
+	  consumeFragments () {
+	    const fragments = this.#fragments;
+
+	    if (fragments.length === 1) {
+	      this.#fragmentsBytes = 0;
+	      return fragments.shift()
+	    }
+
+	    const output = Buffer.concat(fragments, this.#fragmentsBytes);
+	    this.#fragments = [];
+	    this.#fragmentsBytes = 0;
+
+	    return output
 	  }
 
 	  parseCloseBody (data) {
@@ -26510,11 +26653,15 @@ function requireWebsocket () {
 	   * @see https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 	   */
 	  #onConnectionEstablished (response, parsedExtensions) {
-	    // processResponse is called when the "response’s header list has been received and initialized."
+	    // processResponse is called when the "response's header list has been received and initialized."
 	    // once this happens, the connection is open
 	    this[kResponse] = response;
 
-	    const parser = new ByteParser(this, parsedExtensions);
+	    const maxPayloadSize = this[kController]?.dispatcher?.webSocketOptions?.maxPayloadSize;
+
+	    const parser = new ByteParser(this, parsedExtensions, {
+	      maxPayloadSize
+	    });
 	    parser.on('drain', onParserDrain);
 	    parser.on('error', onParserError.bind(this));
 
@@ -37840,14 +37987,38 @@ function requireFastContentTypeParse () {
 
 var fastContentTypeParseExports = requireFastContentTypeParse();
 
+const intRegex = /^-?\d+$/;
 const noiseValue = /^-?\d+n+$/; // Noise - strings that match the custom format before being converted to it
 const originalStringify = JSON.stringify;
 const originalParse = JSON.parse;
+const customFormat = /^-?\d+n$/;
 
-/*
-  Function to serialize value to a JSON string.
-  Converts BigInt values to a custom format (strings with digits and "n" at the end) and then converts them to proper big integers in a JSON string.
-*/
+const bigIntsStringify = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
+const noiseStringify =
+  /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
+
+/**
+ * @typedef {(this: any, key: string | number | undefined, value: any) => any} Replacer
+ * @typedef {(key: string | number | undefined, value: any, context?: { source: string }) => any} Reviver
+ */
+
+/**
+ * Converts a JavaScript value to a JSON string.
+ *
+ * Supports serialization of BigInt values using two strategies:
+ * 1. Custom format "123n" → "123" (universal fallback)
+ * 2. Native JSON.rawJSON() (Node.js 22+, fastest) when available
+ *
+ * All other values are serialized exactly like native JSON.stringify().
+ *
+ * @param {*} value The value to convert to a JSON string.
+ * @param {Replacer | Array<string | number> | null} [replacer]
+ *   A function that alters the behavior of the stringification process,
+ *   or an array of strings/numbers to indicate properties to exclude.
+ * @param {string | number} [space]
+ *   A string or number to specify indentation or pretty-printing.
+ * @returns {string} The JSON string representation.
+ */
 const JSONStringify = (value, replacer, space) => {
   if ("rawJSON" in JSON) {
     return originalStringify(
@@ -37859,19 +38030,16 @@ const JSONStringify = (value, replacer, space) => {
 
         return value;
       },
-      space
+      space,
     );
   }
 
   if (!value) return originalStringify(value, replacer, space);
 
-  const bigInts = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
-  const noise = /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
   const convertedToCustomJSON = originalStringify(
     value,
     (key, value) => {
-      const isNoise =
-        typeof value === "string" && Boolean(value.match(noiseValue));
+      const isNoise = typeof value === "string" && noiseValue.test(value);
 
       if (isNoise) return value.toString() + "n"; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
 
@@ -37881,33 +38049,87 @@ const JSONStringify = (value, replacer, space) => {
 
       return value;
     },
-    space
+    space,
   );
-  const processedJSON = convertedToCustomJSON.replace(bigInts, "$1$2$3"); // Delete one "n" off the end of every BigInt value
-  const denoisedJSON = processedJSON.replace(noise, "$1$2$3"); // Remove one "n" off the end of every noisy string
+  const processedJSON = convertedToCustomJSON.replace(
+    bigIntsStringify,
+    "$1$2$3",
+  ); // Delete one "n" off the end of every BigInt value
+  const denoisedJSON = processedJSON.replace(noiseStringify, "$1$2$3"); // Remove one "n" off the end of every noisy string
 
   return denoisedJSON;
 };
 
-/*
-  Function to check if the JSON.parse's context.source feature is supported.
-*/
-const isContextSourceSupported = () =>
-  JSON.parse("1", (_, __, context) => !!context && context.source === "1");
+const featureCache = new Map();
 
-/*
-  Faster (2x) and simpler function to parse JSON.
-  Based on JSON.parse's context.source feature, which is not universally available now.
-  Does not support the legacy custom format, used in the first version of this library.
-*/
+/**
+ * Detects if the current JSON.parse implementation supports the context.source feature.
+ *
+ * Uses toString() fingerprinting to cache results and automatically detect runtime
+ * replacements of JSON.parse (polyfills, mocks, etc.).
+ *
+ * @returns {boolean} true if context.source is supported, false otherwise.
+ */
+const isContextSourceSupported = () => {
+  const parseFingerprint = JSON.parse.toString();
+
+  if (featureCache.has(parseFingerprint)) {
+    return featureCache.get(parseFingerprint);
+  }
+
+  try {
+    const result = JSON.parse(
+      "1",
+      (_, __, context) => !!context?.source && context.source === "1",
+    );
+    featureCache.set(parseFingerprint, result);
+
+    return result;
+  } catch {
+    featureCache.set(parseFingerprint, false);
+
+    return false;
+  }
+};
+
+/**
+ * Reviver function that converts custom-format BigInt strings back to BigInt values.
+ * Also handles "noise" strings that accidentally match the BigInt format.
+ *
+ * @param {string | number | undefined} key The object key.
+ * @param {*} value The value being parsed.
+ * @param {object} [context] Parse context (if supported by JSON.parse).
+ * @param {Reviver} [userReviver] User's custom reviver function.
+ * @returns {any} The transformed value.
+ */
+const convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
+  const isCustomFormatBigInt =
+    typeof value === "string" && customFormat.test(value);
+  if (isCustomFormatBigInt) return BigInt(value.slice(0, -1));
+
+  const isNoiseValue = typeof value === "string" && noiseValue.test(value);
+  if (isNoiseValue) return value.slice(0, -1);
+
+  return value;
+};
+
+/**
+ * Fast JSON.parse implementation (~2x faster than classic fallback).
+ * Uses JSON.parse's context.source feature to detect integers and convert
+ * large numbers directly to BigInt without string manipulation.
+ *
+ * Does not support legacy custom format from v1 of this library.
+ *
+ * @param {string} text JSON string to parse.
+ * @param {Reviver} [reviver] Transform function to apply to each value.
+ * @returns {any} Parsed JavaScript value.
+ */
 const JSONParseV2 = (text, reviver) => {
-  const intRegex = /^-?\d+$/;
-
   return JSON.parse(text, (key, value, context) => {
     const isBigNumber =
       typeof value === "number" &&
       (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER);
-    const isInt = intRegex.test(context.source);
+    const isInt = context && intRegex.test(context.source);
     const isBigInt = isBigNumber && isInt;
 
     if (isBigInt) return BigInt(context.source);
@@ -37916,29 +38138,40 @@ const JSONParseV2 = (text, reviver) => {
   });
 };
 
-/*
-  Function to parse JSON.
-  If JSON has number values greater than Number.MAX_SAFE_INTEGER, we convert those values to a custom format, then parse them to BigInt values.
-  Other types of values are not affected and parsed as native JSON.parse() would parse them.
-*/
+const MAX_INT = Number.MAX_SAFE_INTEGER.toString();
+const MAX_DIGITS = MAX_INT.length;
+const stringsOrLargeNumbers =
+  /"(?:\\.|[^"])*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
+const noiseValueWithQuotes = /^"-?\d+n+"$/; // Noise - strings that match the custom format before being converted to it
+
+/**
+ * Converts a JSON string into a JavaScript value.
+ *
+ * Supports parsing of large integers using two strategies:
+ * 1. Classic fallback: Marks large numbers with "123n" format, then converts to BigInt
+ * 2. Fast path (JSONParseV2): Uses context.source feature (~2x faster) when available
+ *
+ * All other JSON values are parsed exactly like native JSON.parse().
+ *
+ * @param {string} text A valid JSON string.
+ * @param {Reviver} [reviver]
+ *   A function that transforms the results. This function is called for each member
+ *   of the object. If a member contains nested objects, the nested objects are
+ *   transformed before the parent object is.
+ * @returns {any} The parsed JavaScript value.
+ * @throws {SyntaxError} If text is not valid JSON.
+ */
 const JSONParse = (text, reviver) => {
   if (!text) return originalParse(text, reviver);
 
   if (isContextSourceSupported()) return JSONParseV2(text); // Shortcut to a faster (2x) and simpler version
-
-  const MAX_INT = Number.MAX_SAFE_INTEGER.toString();
-  const MAX_DIGITS = MAX_INT.length;
-  const stringsOrLargeNumbers =
-    /"(?:\\.|[^"])*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
-  const noiseValueWithQuotes = /^"-?\d+n+"$/; // Noise - strings that match the custom format before being converted to it
-  const customFormat = /^-?\d+n$/;
 
   // Find and mark big numbers with "n"
   const serializedData = text.replace(
     stringsOrLargeNumbers,
     (text, digits, fractional, exponential) => {
       const isString = text[0] === '"';
-      const isNoise = isString && Boolean(text.match(noiseValueWithQuotes));
+      const isNoise = isString && noiseValueWithQuotes.test(text);
 
       if (isNoise) return text.substring(0, text.length - 1) + 'n"'; // Mark noise values with additional "n" to offset the deletion of one "n" during the processing
 
@@ -37952,24 +38185,12 @@ const JSONParse = (text, reviver) => {
         return text;
 
       return '"' + text + 'n"';
-    }
+    },
   );
 
-  // Convert marked big numbers to BigInt
-  return originalParse(serializedData, (key, value, context) => {
-    const isCustomFormatBigInt =
-      typeof value === "string" && Boolean(value.match(customFormat));
-
-    if (isCustomFormatBigInt)
-      return BigInt(value.substring(0, value.length - 1));
-
-    const isNoiseValue =
-      typeof value === "string" && Boolean(value.match(noiseValue));
-
-    if (isNoiseValue) return value.substring(0, value.length - 1); // Remove one "n" off the end of the noisy string
-
-    return value;
-  });
+  return originalParse(serializedData, (key, value, context) =>
+    convertMarkedBigIntsReviver(key, value),
+  );
 };
 
 class RequestError extends Error {
@@ -43060,7 +43281,9 @@ function expand_(str, max, isTop) {
             const x = numeric(n[0]);
             const y = numeric(n[1]);
             const width = Math.max(n[0].length, n[1].length);
-            let incr = n.length === 3 && n[2] !== undefined ? Math.abs(numeric(n[2])) : 1;
+            let incr = n.length === 3 && n[2] !== undefined ?
+                Math.max(Math.abs(numeric(n[2])), 1)
+                : 1;
             let test = lte;
             const reverse = y < x;
             if (reverse) {
@@ -43291,16 +43514,16 @@ const parseClass = (glob, position) => {
 const unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true, } = {}) => {
     if (magicalBraces) {
         return windowsPathsNoEscape ?
-            s.replace(/\[([^\/\\])\]/g, '$1')
+            s.replace(/\[([^/\\])\]/g, '$1')
             : s
-                .replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2')
-                .replace(/\\([^\/])/g, '$1');
+                .replace(/((?!\\).|^)\[([^/\\])\]/g, '$1$2')
+                .replace(/\\([^/])/g, '$1');
     }
     return windowsPathsNoEscape ?
-        s.replace(/\[([^\/\\{}])\]/g, '$1')
+        s.replace(/\[([^/\\{}])\]/g, '$1')
         : s
-            .replace(/((?!\\).|^)\[([^\/\\{}])\]/g, '$1$2')
-            .replace(/\\([^\/{}])/g, '$1');
+            .replace(/((?!\\).|^)\[([^/\\{}])\]/g, '$1$2')
+            .replace(/\\([^/{}])/g, '$1');
 };
 
 // parse a single path portion
@@ -43492,15 +43715,14 @@ class AST {
     }
     // reconstructs the pattern
     toString() {
-        if (this.#toString !== undefined)
-            return this.#toString;
-        if (!this.type) {
-            return (this.#toString = this.#parts.map(p => String(p)).join(''));
-        }
-        else {
-            return (this.#toString =
-                this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')');
-        }
+        return (this.#toString !== undefined ? this.#toString
+            : !this.type ?
+                (this.#toString = this.#parts.map(p => String(p)).join(''))
+                : (this.#toString =
+                    this.type +
+                        '(' +
+                        this.#parts.map(p => String(p)).join('|') +
+                        ')'));
     }
     #fillNegs() {
         /* c8 ignore start */
@@ -43780,7 +44002,7 @@ class AST {
     }
     #canUsurpType(c) {
         const m = usurpMap.get(this.type);
-        return !!(m?.has(c));
+        return !!m?.has(c);
     }
     #canUsurp(child) {
         if (!child ||
@@ -44178,7 +44400,7 @@ const minimatch = (p, pattern, options = {}) => {
     return new Minimatch(pattern, options).match(p);
 };
 // Optimized checking for the most common glob patterns.
-const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/;
+const starDotExtRE = /^\*+([^+@!?*[(]*)$/;
 const starDotExtTest = (ext) => (f) => !f.startsWith('.') && f.endsWith(ext);
 const starDotExtTestDot = (ext) => (f) => f.endsWith(ext);
 const starDotExtTestNocase = (ext) => {
@@ -44197,7 +44419,7 @@ const dotStarTest = (f) => f !== '.' && f !== '..' && f.startsWith('.');
 const starRE = /^\*+$/;
 const starTest = (f) => f.length !== 0 && !f.startsWith('.');
 const starTestDot = (f) => f.length !== 0 && f !== '.' && f !== '..';
-const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/;
+const qmarksRE = /^\?+([^+@!?*[(]*)?$/;
 const qmarksTestNocase = ([$0, ext = '']) => {
     const noext = qmarksTestNoExt([$0]);
     if (!ext)
@@ -44424,6 +44646,7 @@ class Minimatch {
         // step 2: expand braces
         this.globSet = [...new Set(this.braceExpand())];
         if (options.debug) {
+            //oxlint-disable-next-line no-console
             this.debug = (...args) => console.error(...args);
         }
         this.debug(this.pattern, this.globSet);
@@ -44486,10 +44709,10 @@ class Minimatch {
     preprocess(globParts) {
         // if we're not in globstar mode, then turn ** into *
         if (this.options.noglobstar) {
-            for (let i = 0; i < globParts.length; i++) {
-                for (let j = 0; j < globParts[i].length; j++) {
-                    if (globParts[i][j] === '**') {
-                        globParts[i][j] = '*';
+            for (const partset of globParts) {
+                for (let j = 0; j < partset.length; j++) {
+                    if (partset[j] === '**') {
+                        partset[j] = '*';
                     }
                 }
             }
@@ -44577,7 +44800,11 @@ class Minimatch {
             let dd = 0;
             while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
                 const p = parts[dd - 1];
-                if (p && p !== '.' && p !== '..' && p !== '**') {
+                if (p &&
+                    p !== '.' &&
+                    p !== '..' &&
+                    p !== '**' &&
+                    !(this.isWindows && /^[a-z]:$/i.test(p))) {
                     didSomething = true;
                     parts.splice(dd - 1, 2);
                     dd -= 2;
@@ -44826,15 +45053,17 @@ class Minimatch {
         // split the pattern up into globstar-delimited sections
         // the tail has to be at the end, and the others just have
         // to be found in order from the head.
-        const [head, body, tail] = partial ? [
-            pattern.slice(patternIndex, firstgs),
-            pattern.slice(firstgs + 1),
-            [],
-        ] : [
-            pattern.slice(patternIndex, firstgs),
-            pattern.slice(firstgs + 1, lastgs),
-            pattern.slice(lastgs + 1),
-        ];
+        const [head, body, tail] = partial ?
+            [
+                pattern.slice(patternIndex, firstgs),
+                pattern.slice(firstgs + 1),
+                [],
+            ]
+            : [
+                pattern.slice(patternIndex, firstgs),
+                pattern.slice(firstgs + 1, lastgs),
+                pattern.slice(lastgs + 1),
+            ];
         // check the head, from the current file/pattern index.
         if (head.length) {
             const fileHead = file.slice(fileIndex, fileIndex + head.length);
@@ -45180,7 +45409,7 @@ class Minimatch {
             this.regexp = new RegExp(re, [...flags].join(''));
             /* c8 ignore start */
         }
-        catch (ex) {
+        catch {
             // should be impossible
             this.regexp = false;
         }
@@ -45195,7 +45424,7 @@ class Minimatch {
         if (this.preserveMultipleSlashes) {
             return p.split('/');
         }
-        else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
+        else if (this.isWindows && /^\/\/[^/]+/.test(p)) {
             // add an extra '' for the one we lose
             return ['', ...p.split(/\/+/)];
         }
@@ -45237,8 +45466,7 @@ class Minimatch {
                 filename = ff[i];
             }
         }
-        for (let i = 0; i < set.length; i++) {
-            const pattern = set[i];
+        for (const pattern of set) {
             let file = ff;
             if (options.matchBase && pattern.length === 1) {
                 file = [filename];
