@@ -27,7 +27,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       minimatch:
-        specifier: ^10.2.4
+        specifier: ^10.2.5
         version: 10.2.5
       parse-diff:
         specifier: ^0.11.1
