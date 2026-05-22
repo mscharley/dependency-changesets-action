@@ -28474,7 +28474,7 @@ var IsInterface = (
   }()
 );
 
-var dist = {};
+var dist$1 = {};
 
 var composer = {};
 
@@ -29251,6 +29251,8 @@ function requireAlias () {
 	     * instance of the `source` anchor before this node.
 	     */
 	    resolve(doc, ctx) {
+	        if (ctx?.maxAliasCount === 0)
+	            throw new ReferenceError('Alias resolution is disabled');
 	        let nodes;
 	        if (ctx?.aliasResolveCache) {
 	            nodes = ctx.aliasResolveCache;
@@ -30552,18 +30554,18 @@ function requireMerge () {
 	        merge.identify(key.value))) &&
 	    ctx?.doc.schema.tags.some(tag => tag.tag === merge.tag && tag.default);
 	function addMergeToJSMap(ctx, map, value) {
-	    value = ctx && identity.isAlias(value) ? value.resolve(ctx.doc) : value;
-	    if (identity.isSeq(value))
-	        for (const it of value.items)
+	    const source = resolveAliasValue(ctx, value);
+	    if (identity.isSeq(source))
+	        for (const it of source.items)
 	            mergeValue(ctx, map, it);
-	    else if (Array.isArray(value))
-	        for (const it of value)
+	    else if (Array.isArray(source))
+	        for (const it of source)
 	            mergeValue(ctx, map, it);
 	    else
-	        mergeValue(ctx, map, value);
+	        mergeValue(ctx, map, source);
 	}
 	function mergeValue(ctx, map, value) {
-	    const source = ctx && identity.isAlias(value) ? value.resolve(ctx.doc) : value;
+	    const source = resolveAliasValue(ctx, value);
 	    if (!identity.isMap(source))
 	        throw new Error('Merge sources must be maps or map aliases');
 	    const srcMap = source.toJSON(null, ctx, Map);
@@ -30585,6 +30587,9 @@ function requireMerge () {
 	        }
 	    }
 	    return map;
+	}
+	function resolveAliasValue(ctx, value) {
+	    return ctx && identity.isAlias(value) ? value.resolve(ctx.doc, ctx) : value;
 	}
 
 	merge$1.addMergeToJSMap = addMergeToJSMap;
@@ -31316,7 +31321,8 @@ function requireStringifyNumber () {
 	    if (!format &&
 	        minFractionDigits &&
 	        (!tag || tag === 'tag:yaml.org,2002:float') &&
-	        /^\d/.test(n)) {
+	        /^-?\d/.test(n) &&
+	        !n.includes('e')) {
 	        let i = n.indexOf('.');
 	        if (i < 0) {
 	            i = n.length;
@@ -34085,7 +34091,7 @@ function requireResolveFlowScalar () {
 	                    next = source[++i + 1];
 	            }
 	            else if (next === 'x' || next === 'u' || next === 'U') {
-	                const length = { x: 2, u: 4, U: 8 }[next];
+	                const length = next === 'x' ? 2 : next === 'u' ? 4 : 8;
 	                res += parseCharCode(source, i + 1, length, onError);
 	                i += length;
 	            }
@@ -34155,12 +34161,14 @@ function requireResolveFlowScalar () {
 	    const cc = source.substr(offset, length);
 	    const ok = cc.length === length && /^[0-9a-fA-F]+$/.test(cc);
 	    const code = ok ? parseInt(cc, 16) : NaN;
-	    if (isNaN(code)) {
+	    try {
+	        return String.fromCodePoint(code);
+	    }
+	    catch {
 	        const raw = source.substr(offset - 2, length + 2);
 	        onError(offset - 2, 'BAD_DQ_ESCAPE', `Invalid escape sequence ${raw}`);
 	        return raw;
 	    }
-	    return String.fromCodePoint(code);
 	}
 
 	resolveFlowScalar.resolveFlowScalar = resolveFlowScalar$1;
@@ -34573,8 +34581,10 @@ function requireComposer () {
 	            }
 	        }
 	        if (afterDoc) {
-	            Array.prototype.push.apply(doc.errors, this.errors);
-	            Array.prototype.push.apply(doc.warnings, this.warnings);
+	            for (let i = 0; i < this.errors.length; ++i)
+	                doc.errors.push(this.errors[i]);
+	            for (let i = 0; i < this.warnings.length; ++i)
+	                doc.warnings.push(this.warnings[i]);
 	        }
 	        else {
 	            doc.errors = this.errors;
@@ -35547,7 +35557,7 @@ function requireLexer () {
 	            const n = (yield* this.pushCount(1)) + (yield* this.pushSpaces(true));
 	            this.indentNext = this.indentValue + 1;
 	            this.indentValue += n;
-	            return yield* this.parseBlockStart();
+	            return 'block-start';
 	        }
 	        return 'doc';
 	    }
@@ -35868,32 +35878,36 @@ function requireLexer () {
 	        return 0;
 	    }
 	    *pushIndicators() {
-	        switch (this.charAt(0)) {
-	            case '!':
-	                return ((yield* this.pushTag()) +
-	                    (yield* this.pushSpaces(true)) +
-	                    (yield* this.pushIndicators()));
-	            case '&':
-	                return ((yield* this.pushUntil(isNotAnchorChar)) +
-	                    (yield* this.pushSpaces(true)) +
-	                    (yield* this.pushIndicators()));
-	            case '-': // this is an error
-	            case '?': // this is an error outside flow collections
-	            case ':': {
-	                const inFlow = this.flowLevel > 0;
-	                const ch1 = this.charAt(1);
-	                if (isEmpty(ch1) || (inFlow && flowIndicatorChars.has(ch1))) {
-	                    if (!inFlow)
-	                        this.indentNext = this.indentValue + 1;
-	                    else if (this.flowKey)
-	                        this.flowKey = false;
-	                    return ((yield* this.pushCount(1)) +
-	                        (yield* this.pushSpaces(true)) +
-	                        (yield* this.pushIndicators()));
+	        let n = 0;
+	        loop: while (true) {
+	            switch (this.charAt(0)) {
+	                case '!':
+	                    n += yield* this.pushTag();
+	                    n += yield* this.pushSpaces(true);
+	                    continue loop;
+	                case '&':
+	                    n += yield* this.pushUntil(isNotAnchorChar);
+	                    n += yield* this.pushSpaces(true);
+	                    continue loop;
+	                case '-': // this is an error
+	                case '?': // this is an error outside flow collections
+	                case ':': {
+	                    const inFlow = this.flowLevel > 0;
+	                    const ch1 = this.charAt(1);
+	                    if (isEmpty(ch1) || (inFlow && flowIndicatorChars.has(ch1))) {
+	                        if (!inFlow)
+	                            this.indentNext = this.indentValue + 1;
+	                        else if (this.flowKey)
+	                            this.flowKey = false;
+	                        n += yield* this.pushCount(1);
+	                        n += yield* this.pushSpaces(true);
+	                        continue loop;
+	                    }
 	                }
 	            }
+	            break loop;
 	        }
-	        return 0;
+	        return n;
 	    }
 	    *pushTag() {
 	        if (this.charAt(1) === '<') {
@@ -36083,6 +36097,14 @@ function requireParser () {
 	    }
 	    return prev.splice(i, prev.length);
 	}
+	function arrayPushArray(target, source) {
+	    // May exhaust call stack with large `source` array
+	    if (source.length < 1e5)
+	        Array.prototype.push.apply(target, source);
+	    else
+	        for (let i = 0; i < source.length; ++i)
+	            target.push(source[i]);
+	}
 	function fixFlowSeqItems(fc) {
 	    if (fc.start.type === 'flow-seq-start') {
 	        for (const it of fc.items) {
@@ -36095,12 +36117,12 @@ function requireParser () {
 	                delete it.key;
 	                if (isFlowToken(it.value)) {
 	                    if (it.value.end)
-	                        Array.prototype.push.apply(it.value.end, it.sep);
+	                        arrayPushArray(it.value.end, it.sep);
 	                    else
 	                        it.value.end = it.sep;
 	                }
 	                else
-	                    Array.prototype.push.apply(it.start, it.sep);
+	                    arrayPushArray(it.start, it.sep);
 	                delete it.sep;
 	            }
 	        }
@@ -36520,7 +36542,7 @@ function requireParser () {
 	                        const prev = map.items[map.items.length - 2];
 	                        const end = prev?.value?.end;
 	                        if (Array.isArray(end)) {
-	                            Array.prototype.push.apply(end, it.start);
+	                            arrayPushArray(end, it.start);
 	                            end.push(this.sourceToken);
 	                            map.items.pop();
 	                            return;
@@ -36735,7 +36757,7 @@ function requireParser () {
 	                        const prev = seq.items[seq.items.length - 2];
 	                        const end = prev?.value?.end;
 	                        if (Array.isArray(end)) {
-	                            Array.prototype.push.apply(end, it.start);
+	                            arrayPushArray(end, it.start);
 	                            end.push(this.sourceToken);
 	                            seq.items.pop();
 	                            return;
@@ -37102,11 +37124,11 @@ function requirePublicApi () {
 	return publicApi;
 }
 
-var hasRequiredDist;
+var hasRequiredDist$1;
 
-function requireDist () {
-	if (hasRequiredDist) return dist;
-	hasRequiredDist = 1;
+function requireDist$1 () {
+	if (hasRequiredDist$1) return dist$1;
+	hasRequiredDist$1 = 1;
 
 	var composer = requireComposer();
 	var Document = requireDocument();
@@ -37127,39 +37149,39 @@ function requireDist () {
 
 
 
-	dist.Composer = composer.Composer;
-	dist.Document = Document.Document;
-	dist.Schema = Schema.Schema;
-	dist.YAMLError = errors.YAMLError;
-	dist.YAMLParseError = errors.YAMLParseError;
-	dist.YAMLWarning = errors.YAMLWarning;
-	dist.Alias = Alias.Alias;
-	dist.isAlias = identity.isAlias;
-	dist.isCollection = identity.isCollection;
-	dist.isDocument = identity.isDocument;
-	dist.isMap = identity.isMap;
-	dist.isNode = identity.isNode;
-	dist.isPair = identity.isPair;
-	dist.isScalar = identity.isScalar;
-	dist.isSeq = identity.isSeq;
-	dist.Pair = Pair.Pair;
-	dist.Scalar = Scalar.Scalar;
-	dist.YAMLMap = YAMLMap.YAMLMap;
-	dist.YAMLSeq = YAMLSeq.YAMLSeq;
-	dist.CST = cst;
-	dist.Lexer = lexer.Lexer;
-	dist.LineCounter = lineCounter.LineCounter;
-	dist.Parser = parser.Parser;
-	dist.parse = publicApi.parse;
-	dist.parseAllDocuments = publicApi.parseAllDocuments;
-	dist.parseDocument = publicApi.parseDocument;
-	dist.stringify = publicApi.stringify;
-	dist.visit = visit.visit;
-	dist.visitAsync = visit.visitAsync;
-	return dist;
+	dist$1.Composer = composer.Composer;
+	dist$1.Document = Document.Document;
+	dist$1.Schema = Schema.Schema;
+	dist$1.YAMLError = errors.YAMLError;
+	dist$1.YAMLParseError = errors.YAMLParseError;
+	dist$1.YAMLWarning = errors.YAMLWarning;
+	dist$1.Alias = Alias.Alias;
+	dist$1.isAlias = identity.isAlias;
+	dist$1.isCollection = identity.isCollection;
+	dist$1.isDocument = identity.isDocument;
+	dist$1.isMap = identity.isMap;
+	dist$1.isNode = identity.isNode;
+	dist$1.isPair = identity.isPair;
+	dist$1.isScalar = identity.isScalar;
+	dist$1.isSeq = identity.isSeq;
+	dist$1.Pair = Pair.Pair;
+	dist$1.Scalar = Scalar.Scalar;
+	dist$1.YAMLMap = YAMLMap.YAMLMap;
+	dist$1.YAMLSeq = YAMLSeq.YAMLSeq;
+	dist$1.CST = cst;
+	dist$1.Lexer = lexer.Lexer;
+	dist$1.LineCounter = lineCounter.LineCounter;
+	dist$1.Parser = parser.Parser;
+	dist$1.parse = publicApi.parse;
+	dist$1.parseAllDocuments = publicApi.parseAllDocuments;
+	dist$1.parseDocument = publicApi.parseDocument;
+	dist$1.stringify = publicApi.stringify;
+	dist$1.visit = visit.visit;
+	dist$1.visitAsync = visit.visitAsync;
+	return dist$1;
 }
 
-var distExports = requireDist();
+var distExports$1 = requireDist$1();
 
 const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, dataType) => {
     debug(`Fetching file from ${owner}/${repo}#${ref}:${path}`);
@@ -37185,7 +37207,7 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
         throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
     }
     const dt = dataType ?? 'json';
-    const data = dt === 'json' ? JSON.parse(response.data) : (dt === 'yaml' ? distExports.parse(response.data) : response.data);
+    const data = dt === 'json' ? JSON.parse(response.data) : (dt === 'yaml' ? distExports$1.parse(response.data) : response.data);
     try {
         assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
     }
@@ -37807,185 +37829,186 @@ function withDefaults$2(oldDefaults, newDefaults) {
 // pkg/dist-src/index.js
 var endpoint = withDefaults$2(null, DEFAULTS);
 
-var fastContentTypeParse = {};
+var dist = {};
 
-var hasRequiredFastContentTypeParse;
+var hasRequiredDist;
 
-function requireFastContentTypeParse () {
-	if (hasRequiredFastContentTypeParse) return fastContentTypeParse;
-	hasRequiredFastContentTypeParse = 1;
-
-	const NullObject = function NullObject () { };
-	NullObject.prototype = Object.create(null);
-
-	/**
-	 * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
-	 *
-	 * parameter     = token "=" ( token / quoted-string )
-	 * token         = 1*tchar
-	 * tchar         = "!" / "#" / "$" / "%" / "&" / "'" / "*"
-	 *               / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
-	 *               / DIGIT / ALPHA
-	 *               ; any VCHAR, except delimiters
-	 * quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
-	 * qdtext        = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
-	 * obs-text      = %x80-FF
-	 * quoted-pair   = "\" ( HTAB / SP / VCHAR / obs-text )
+function requireDist () {
+	if (hasRequiredDist) return dist;
+	hasRequiredDist = 1;
+	/*!
+	 * content-type
+	 * Copyright(c) 2015 Douglas Christopher Wilson
+	 * MIT Licensed
 	 */
-	const paramRE = /; *([!#$%&'*+.^\w`|~-]+)=("(?:[\v\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\v\u0020-\u00ff])*"|[!#$%&'*+.^\w`|~-]+) */gu;
-
+	Object.defineProperty(dist, "__esModule", { value: true });
+	dist.format = format;
+	dist.parse = parse;
+	const TEXT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]*$/;
+	const TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 	/**
-	 * RegExp to match quoted-pair in RFC 7230 sec 3.2.6
-	 *
-	 * quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
-	 * obs-text    = %x80-FF
+	 * RegExp to match chars that must be quoted-pair in RFC 9110 sec 5.6.4
 	 */
-	const quotedPairRE = /\\([\v\u0020-\u00ff])/gu;
-
+	const QUOTE_REGEXP = /[\\"]/g;
 	/**
-	 * RegExp to match type in RFC 7231 sec 3.1.1.1
+	 * RegExp to match type in RFC 9110 sec 8.3.1
 	 *
 	 * media-type = type "/" subtype
 	 * type       = token
 	 * subtype    = token
 	 */
-	const mediaTypeRE = /^[!#$%&'*+.^\w|~-]+\/[!#$%&'*+.^\w|~-]+$/u;
-
-	// default ContentType to prevent repeated object creation
-	const defaultContentType = { type: '', parameters: new NullObject() };
-	Object.freeze(defaultContentType.parameters);
-	Object.freeze(defaultContentType);
-
+	const TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 	/**
-	 * Parse media type to object.
-	 *
-	 * @param {string|object} header
-	 * @return {Object}
-	 * @public
+	 * Null object perf optimization. Faster than `Object.create(null)` and `{ __proto__: null }`.
 	 */
-
-	function parse (header) {
-	  if (typeof header !== 'string') {
-	    throw new TypeError('argument header is required and must be a string')
-	  }
-
-	  let index = header.indexOf(';');
-	  const type = index !== -1
-	    ? header.slice(0, index).trim()
-	    : header.trim();
-
-	  if (mediaTypeRE.test(type) === false) {
-	    throw new TypeError('invalid media type')
-	  }
-
-	  const result = {
-	    type: type.toLowerCase(),
-	    parameters: new NullObject()
-	  };
-
-	  // parse parameters
-	  if (index === -1) {
-	    return result
-	  }
-
-	  let key;
-	  let match;
-	  let value;
-
-	  paramRE.lastIndex = index;
-
-	  while ((match = paramRE.exec(header))) {
-	    if (match.index !== index) {
-	      throw new TypeError('invalid parameter format')
+	const NullObject = /* @__PURE__ */ (() => {
+	    const C = function () { };
+	    C.prototype = Object.create(null);
+	    return C;
+	})();
+	/**
+	 * Format an object into a `Content-Type` header.
+	 */
+	function format(obj) {
+	    const { type, parameters } = obj;
+	    if (!type || !TYPE_REGEXP.test(type)) {
+	        throw new TypeError(`Invalid type: ${type}`);
 	    }
-
-	    index += match[0].length;
-	    key = match[1].toLowerCase();
-	    value = match[2];
-
-	    if (value[0] === '"') {
-	      // remove quotes and escapes
-	      value = value
-	        .slice(1, value.length - 1);
-
-	      quotedPairRE.test(value) && (value = value.replace(quotedPairRE, '$1'));
+	    let result = type;
+	    if (parameters) {
+	        for (const param of Object.keys(parameters)) {
+	            if (!TOKEN_REGEXP.test(param)) {
+	                throw new TypeError(`Invalid parameter name: ${param}`);
+	            }
+	            result += `; ${param}=${qstring(parameters[param])}`;
+	        }
 	    }
-
-	    result.parameters[key] = value;
-	  }
-
-	  if (index !== header.length) {
-	    throw new TypeError('invalid parameter format')
-	  }
-
-	  return result
+	    return result;
 	}
-
-	function safeParse (header) {
-	  if (typeof header !== 'string') {
-	    return defaultContentType
-	  }
-
-	  let index = header.indexOf(';');
-	  const type = index !== -1
-	    ? header.slice(0, index).trim()
-	    : header.trim();
-
-	  if (mediaTypeRE.test(type) === false) {
-	    return defaultContentType
-	  }
-
-	  const result = {
-	    type: type.toLowerCase(),
-	    parameters: new NullObject()
-	  };
-
-	  // parse parameters
-	  if (index === -1) {
-	    return result
-	  }
-
-	  let key;
-	  let match;
-	  let value;
-
-	  paramRE.lastIndex = index;
-
-	  while ((match = paramRE.exec(header))) {
-	    if (match.index !== index) {
-	      return defaultContentType
-	    }
-
-	    index += match[0].length;
-	    key = match[1].toLowerCase();
-	    value = match[2];
-
-	    if (value[0] === '"') {
-	      // remove quotes and escapes
-	      value = value
-	        .slice(1, value.length - 1);
-
-	      quotedPairRE.test(value) && (value = value.replace(quotedPairRE, '$1'));
-	    }
-
-	    result.parameters[key] = value;
-	  }
-
-	  if (index !== header.length) {
-	    return defaultContentType
-	  }
-
-	  return result
+	/**
+	 * Parse a `Content-Type` header.
+	 */
+	function parse(header, options) {
+	    const len = header.length;
+	    let index = skipOWS(header, 0, len);
+	    const valueStart = index;
+	    index = skipValue(header, index, len);
+	    const valueEnd = trailingOWS(header, valueStart, index);
+	    const type = header.slice(valueStart, valueEnd).toLowerCase();
+	    const parameters = options?.parameters === false
+	        ? new NullObject()
+	        : parseParameters(header, index, len);
+	    return { type, parameters };
 	}
-
-	fastContentTypeParse.default = { parse, safeParse };
-	fastContentTypeParse.parse = parse;
-	fastContentTypeParse.safeParse = safeParse;
-	fastContentTypeParse.defaultContentType = defaultContentType;
-	return fastContentTypeParse;
+	const SP = 32; // " "
+	const HTAB = 9; // "\t"
+	const SEMI = 59; // ";"
+	const EQ = 61; // "="
+	const DQUOTE = 34; // '"'
+	const BSLASH = 92; // "\\"
+	/**
+	 * Parses the parameters of a `Content-Type` header starting at the given index.
+	 */
+	function parseParameters(header, index, len) {
+	    const parameters = new NullObject();
+	    parameter: while (index < len) {
+	        index = skipOWS(header, index + 1 /* Skip over ; */, len);
+	        const keyStart = index;
+	        while (index < len) {
+	            const code = header.charCodeAt(index);
+	            if (code === SEMI)
+	                continue parameter;
+	            if (code === EQ) {
+	                const keyEnd = trailingOWS(header, keyStart, index);
+	                const key = header.slice(keyStart, keyEnd).toLowerCase();
+	                index = skipOWS(header, index + 1, len);
+	                if (index < len && header.charCodeAt(index) === DQUOTE) {
+	                    index++;
+	                    let value = "";
+	                    while (index < len) {
+	                        const code = header.charCodeAt(index++);
+	                        if (code === DQUOTE) {
+	                            index = skipValue(header, index, len);
+	                            if (parameters[key] === undefined)
+	                                parameters[key] = value;
+	                            break;
+	                        }
+	                        if (code === BSLASH && index < len) {
+	                            value += header[index++];
+	                            continue;
+	                        }
+	                        value += String.fromCharCode(code);
+	                    }
+	                    continue parameter;
+	                }
+	                const valueStart = index;
+	                index = skipValue(header, index, len);
+	                if (parameters[key] === undefined) {
+	                    const valueEnd = trailingOWS(header, valueStart, index);
+	                    parameters[key] = header.slice(valueStart, valueEnd);
+	                }
+	                continue parameter;
+	            }
+	            index++;
+	        }
+	    }
+	    return parameters;
+	}
+	/**
+	 * Skip over characters until a semicolon.
+	 */
+	function skipValue(str, index, len) {
+	    while (index < len) {
+	        const char = str.charCodeAt(index);
+	        if (char === SEMI)
+	            break;
+	        index++;
+	    }
+	    return index;
+	}
+	/**
+	 * Skip optional whitespace (OWS) in an HTTP header value.
+	 *
+	 * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
+	 */
+	function skipOWS(header, index, len) {
+	    while (index < len) {
+	        const char = header.charCodeAt(index);
+	        if (char !== SP && char !== HTAB)
+	            break;
+	        index++;
+	    }
+	    return index;
+	}
+	/**
+	 * Trim optional whitespace (OWS) from the end of a substring.
+	 *
+	 * OWS is defined in RFC 9110 sec 5.6.3 as SP (" ") or HTAB ("\t").
+	 */
+	function trailingOWS(header, start, end) {
+	    while (end > start) {
+	        const char = header.charCodeAt(end - 1);
+	        if (char !== SP && char !== HTAB)
+	            break;
+	        end--;
+	    }
+	    return end;
+	}
+	/**
+	 * Serialize a parameter value.
+	 */
+	function qstring(str) {
+	    if (TOKEN_REGEXP.test(str))
+	        return str;
+	    if (TEXT_REGEXP.test(str))
+	        return `"${str.replace(QUOTE_REGEXP, "\\$&")}"`;
+	    throw new TypeError(`Invalid parameter value: ${str}`);
+	}
+	
+	return dist;
 }
 
-var fastContentTypeParseExports = requireFastContentTypeParse();
+var distExports = requireDist();
 
 const intRegex = /^-?\d+$/;
 const noiseValue = /^-?\d+n+$/; // Noise - strings that match the custom format before being converted to it
@@ -38235,7 +38258,7 @@ class RequestError extends Error {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$5 = "10.0.8";
+var VERSION$5 = "10.0.9";
 
 // pkg/dist-src/defaults.js
 var defaults_default = {
@@ -38357,7 +38380,7 @@ async function getResponseData(response) {
   if (!contentType) {
     return response.text().catch(noop$2);
   }
-  const mimetype = fastContentTypeParseExports.safeParse(contentType);
+  const mimetype = distExports.parse(contentType);
   if (isJSONResponse(mimetype)) {
     let text = "";
     try {
@@ -43292,7 +43315,7 @@ function expand_(str, max, isTop) {
             }
             const pad = n.some(isPadded);
             N = [];
-            for (let i = x; test(i, y); i += incr) {
+            for (let i = x; test(i, y) && N.length < max; i += incr) {
                 let c;
                 if (isAlphaSequence) {
                     c = String.fromCharCode(i);

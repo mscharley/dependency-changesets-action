@@ -1,5 +1,5 @@
 Name: @actions/core
-Version: 3.0.0
+Version: 3.0.1
 License: MIT
 Private: false
 Description: Actions core lib
@@ -98,7 +98,7 @@ SOFTWARE.
 ---
 
 Name: @actions/http-client
-Version: 4.0.0
+Version: 4.0.1
 License: MIT
 Private: false
 Description: Actions Http Client
@@ -545,7 +545,7 @@ You may add additional accurate notices of copyright ownership.
 ---
 
 Name: yaml
-Version: 2.8.3
+Version: 2.9.0
 License: ISC
 Private: false
 Description: JavaScript parser and stringifier for YAML
@@ -839,46 +839,38 @@ THE SOFTWARE.
 
 ---
 
-Name: fast-content-type-parse
-Version: 3.0.0
+Name: content-type
+Version: 2.0.0
 License: MIT
 Private: false
-Description: Parse HTTP Content-Type header according to RFC 7231
-Repository: git+https://github.com/fastify/fast-content-type-parse.git
-Homepage: https://github.com/fastify/fast-content-type-parse#readme
-Author: Aras Abbasi <aras.abbasi@gmail.com>
-Contributors:
-  Gürgün Dayıoğlu <hey@gurgun.day> (https://heyhey.to/G)
-  Manuel Spigolon <behemoth89@gmail.com>
-  James Sumners (https://james.sumners.info)
-  Frazer Smith <frazer.dev@icloud.com> (https://github.com/fdawgs)
+Description: Create and parse HTTP Content-Type header
+Repository: undefined
+Author: Douglas Christopher Wilson <doug@somethingdoug.com>
 License Text:
 ===
 
-MIT License
+(The MIT License)
 
-Copyright (c) 2023 The Fastify Team
+Copyright (c) 2015 Douglas Christopher Wilson
 
-The Fastify team members are listed at https://github.com/fastify/fastify#team
-and in the README file.
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
 
@@ -951,7 +943,7 @@ THE SOFTWARE.
 ---
 
 Name: @octokit/request
-Version: 10.0.8
+Version: 10.0.9
 License: MIT
 Private: false
 Description: Send parameterized requests to GitHub's APIs with sensible defaults in browsers and Node
@@ -1228,7 +1220,7 @@ SOFTWARE.
 ---
 
 Name: brace-expansion
-Version: 5.0.5
+Version: 5.0.6
 License: MIT
 Private: false
 Description: Brace expansion as known from sh/bash
