@@ -1,7 +1,7 @@
 import { assert } from 'generic-type-guard';
 import { debug } from '@actions/core';
 import type { OctokitClient } from '../OctokitClient.js';
-import { parse as parseYaml } from 'yaml';
+import { parseAllDocuments } from 'yaml';
 import type { TypeGuard } from 'generic-type-guard';
 import { debugJson } from '../debugJson.js';
 
@@ -33,7 +33,14 @@ export const getOptionalFile
 					throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
 				}
 				const dt = dataType ?? 'json';
-				const data: unknown = dt === 'json' ? JSON.parse(response.data) : (dt === 'yaml' ? parseYaml(response.data) : response.data);
+				const data: unknown = dt === 'json'
+					? JSON.parse(response.data)
+					: (dt === 'yaml'
+							? parseAllDocuments(response.data).reduce<Record<string, unknown>>(
+									(acc, doc) => Object.assign(acc, doc.toJSON() as Record<string, unknown>),
+									{},
+								)
+							: response.data);
 				try {
 					assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
 				} catch (e) {
