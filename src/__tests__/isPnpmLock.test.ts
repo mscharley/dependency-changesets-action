@@ -3,10 +3,7 @@ import { isPnpmLock } from '../model/PnpmLock.js';
 import { parseAllDocuments } from 'yaml';
 
 const parseYaml = (input: string): unknown =>
-	parseAllDocuments(input).reduce<Record<string, unknown>>(
-		(acc, doc) => Object.assign(acc, doc.toJSON() as Record<string, unknown>),
-		{},
-	);
+	parseAllDocuments(input).pop()?.toJSON();
 
 describe('isPnpmLock', () => {
 	it('accepts a single-document lockfile', () => {
@@ -33,6 +30,7 @@ settings:
 configDependencies:
   '@company/config': 1.0.0
 ---
+lockfileVersion: '9.0'
 importers:
   .:
     dependencies:
@@ -47,6 +45,7 @@ importers:
 		expect(isPnpmLock(data)).toBe(true);
 		expect((data as Record<string, unknown>).lockfileVersion).toBe('9.0');
 		expect((data as Record<string, unknown>).importers).toBeDefined();
+		expect((data as Record<string, unknown>).configDependencies).toBeUndefined();
 	});
 
 	it('accepts a lockfile with no importers', () => {

@@ -37188,7 +37188,7 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
     const data = dt === 'json'
         ? JSON.parse(response.data)
         : (dt === 'yaml'
-            ? distExports.parseAllDocuments(response.data).reduce((acc, doc) => Object.assign(acc, doc.toJSON()), {})
+            ? distExports.parseAllDocuments(response.data).pop()?.toJSON()
             : response.data);
     try {
         assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);

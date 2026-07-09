@@ -36,10 +36,7 @@ export const getOptionalFile
 				const data: unknown = dt === 'json'
 					? JSON.parse(response.data)
 					: (dt === 'yaml'
-							? parseAllDocuments(response.data).reduce<Record<string, unknown>>(
-									(acc, doc) => Object.assign(acc, doc.toJSON() as Record<string, unknown>),
-									{},
-								)
+							? parseAllDocuments(response.data).pop()?.toJSON()
 							: response.data);
 				try {
 					assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
