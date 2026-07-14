@@ -37185,7 +37185,11 @@ const getOptionalFile = (octokit, owner, repo, ref) => (guard) => async (path, d
         throw new Error(`Invalid data when retrieving package file: ${owner}/${repo}#${ref}:${path}`);
     }
     const dt = dataType ?? 'json';
-    const data = dt === 'json' ? JSON.parse(response.data) : (dt === 'yaml' ? distExports.parse(response.data) : response.data);
+    const data = dt === 'json'
+        ? JSON.parse(response.data)
+        : (dt === 'yaml'
+            ? distExports.parseAllDocuments(response.data).pop()?.toJSON()
+            : response.data);
     try {
         assert(data, guard, `Invalid contents for file ${owner}/${repo}#${ref}:${path}`);
     }

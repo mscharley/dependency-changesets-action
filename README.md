@@ -110,6 +110,15 @@ Others are likely able to be used with this Action as well, it doesn't rely on a
 service - these are the services we've tested and know work. If you've got an example for another service then please
 reach out so we can add it to the list!
 
+## Contributing
+
+1. Fork and clone the repository
+2. Install dependencies with `pnpm install`
+3. Make your changes
+4. Run `pnpm run all` to run codegen, linting, tests, and bundling
+5. Commit your changes **including the `dist/` directory** — the bundled action output must be checked in
+6. Open a pull request
+
 ## License
 
 The scripts and documentation in this project are released under the [MIT License][license]
