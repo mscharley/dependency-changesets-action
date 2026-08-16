@@ -1331,7 +1331,7 @@ software or this license, under any kind of legal claim._**
 ---
 
 Name: parse-diff
-Version: 0.11.1
+Version: 0.12.0
 License: MIT
 Private: false
 Description: Unified diff parser
