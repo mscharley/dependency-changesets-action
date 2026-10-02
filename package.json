@@ -50,7 +50,7 @@
 		"@jest/globals": "30.3.0",
 		"@mscharley/eslint-config": "4.2.23",
 		"@mscharley/prettier-config": "3.1.9",
-		"@rollup/plugin-commonjs": "29.0.2",
+		"@rollup/plugin-commonjs": "29.0.3",
 		"@rollup/plugin-node-resolve": "16.0.3",
 		"@rollup/plugin-typescript": "12.3.0",
 		"@swc/jest": "0.2.39",
